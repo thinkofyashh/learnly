@@ -1,0 +1,50 @@
+.toggle {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  color: var(--text-primary);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.toggle:hover {
+  color: var(--primary);
+  background: var(--surface-hover);
+  transform: translateY(-2px);
+}
+
+.toggle:active {
+  transform: translateY(0) scale(0.94);
+}
+
+.sun,
+.moon {
+  grid-area: 1 / 1;
+  transition: opacity var(--transition-normal), transform var(--transition-normal);
+}
+
+.moon {
+  opacity: 0;
+  transform: rotate(-30deg) scale(0.75);
+}
+
+:global([data-theme="dark"]) .sun {
+  opacity: 0;
+  transform: rotate(30deg) scale(0.75);
+}
+
+:global([data-theme="dark"]) .moon {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+
