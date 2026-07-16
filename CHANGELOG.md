@@ -12,3 +12,4 @@
 - Public document library and detail views
 - Administrative upload and processing interfaces
 - Persistent light and dark appearance modes
+- Responsive custom cursor for desktop pointer devices

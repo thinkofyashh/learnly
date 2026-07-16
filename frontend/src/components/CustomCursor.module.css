@@ -1,0 +1,89 @@
+.point,
+.ring,
+.glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 95;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform;
+}
+
+.point {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: var(--cursor-accent);
+  box-shadow:
+    0 0 0 2px var(--cursor-contrast),
+    0 0 12px 2px color-mix(in srgb, var(--cursor-accent) 72%, transparent);
+  transition: opacity var(--transition-fast);
+}
+
+.ring {
+  width: 32px;
+  height: 32px;
+  margin: -16px 0 0 -16px;
+  border: 1px solid color-mix(in srgb, var(--cursor-accent) 74%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--cursor-accent) 5%, transparent);
+  box-shadow:
+    inset 0 0 9px color-mix(in srgb, var(--cursor-accent) 12%, transparent),
+    0 0 11px color-mix(in srgb, var(--cursor-accent) 18%, transparent);
+  transition:
+    width var(--transition-fast),
+    height var(--transition-fast),
+    margin var(--transition-fast),
+    opacity var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.glow {
+  width: 58px;
+  height: 58px;
+  margin: -29px 0 0 -29px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--cursor-accent) 22%, transparent) 0%,
+    color-mix(in srgb, var(--cursor-accent) 8%, transparent) 42%,
+    transparent 72%
+  );
+  filter: blur(6px);
+  transform-origin: center;
+  transition:
+    width var(--transition-normal),
+    height var(--transition-normal),
+    margin var(--transition-normal),
+    opacity var(--transition-normal);
+}
+
+.point[data-visible="true"],
+.ring[data-visible="true"],
+.glow[data-visible="true"] {
+  opacity: 1;
+}
+
+.ring[data-interactive="true"] {
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  background: color-mix(in srgb, var(--cursor-accent) 16%, transparent);
+}
+
+.glow[data-interactive="true"] {
+  width: 82px;
+  height: 82px;
+  margin: -41px 0 0 -41px;
+  opacity: 0.9;
+}
+
+@media (pointer: coarse), (hover: none), (prefers-reduced-motion: reduce) {
+  .point,
+  .ring,
+  .glow {
+    display: none;
+  }
+}
