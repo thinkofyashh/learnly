@@ -1,0 +1,46 @@
+.glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 95;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform;
+}
+
+.glow {
+  width: 54px;
+  height: 54px;
+  margin: -27px 0 0 -27px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--cursor-accent) 28%, transparent) 0%,
+    color-mix(in srgb, var(--cursor-accent) 10%, transparent) 38%,
+    transparent 70%
+  );
+  filter: blur(7px);
+  transform-origin: center;
+  transition:
+    width var(--transition-normal),
+    height var(--transition-normal),
+    margin var(--transition-normal),
+    opacity var(--transition-normal);
+}
+
+.glow[data-visible="true"] {
+  opacity: 0.86;
+}
+
+.glow[data-interactive="true"] {
+  width: 72px;
+  height: 72px;
+  margin: -36px 0 0 -36px;
+  opacity: 1;
+}
+
+@media (pointer: coarse), (hover: none), (prefers-reduced-motion: reduce) {
+  .glow {
+    display: none;
+  }
+}
