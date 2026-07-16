@@ -23,6 +23,6 @@ backend/*.db
 .DS_Store
 *.log
 coverage/
+*.tsbuildinfo
 .vscode/
 .idea/
-
