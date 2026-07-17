@@ -1,3 +1,53 @@
 "use client";
-import { useEffect,useState } from "react"; import styles from "./SplashScreen.module.css";
-export function SplashScreen(){const [visible,setVisible]=useState(false);const [closing,setClosing]=useState(false);useEffect(()=>{if(sessionStorage.getItem("learnly-splash-seen"))return;const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;document.body.style.overflow="hidden";sessionStorage.setItem("learnly-splash-seen","true");const reveal=window.setTimeout(()=>setVisible(true),0);const close=window.setTimeout(()=>setClosing(true),reduced?350:2050);const remove=window.setTimeout(()=>{setVisible(false);document.body.style.overflow=""},reduced?600:2450);return()=>{clearTimeout(reveal);clearTimeout(close);clearTimeout(remove);document.body.style.overflow=""}},[]);if(!visible)return null;return <div className={`${styles.splash} ${closing?styles.closing:""}`} role="status" aria-label="Learnly."><span aria-hidden className={styles.word}>{[..."Learnly."].map((letter,index)=><span key={index} style={{animationDelay:`${index*150}ms`}}>{letter}</span>)}</span><span className="sr-only">Learnly.</span></div>}
+
+import { useEffect, useState } from "react";
+
+import styles from "./SplashScreen.module.css";
+
+export function SplashScreen() {
+  const [visible, setVisible] = useState(false);
+  const [closing, setClosing] = useState(false);
+
+  useEffect(() => {
+    // Show once per browser tab and shorten the sequence for reduced-motion users.
+    if (sessionStorage.getItem("learnly-splash-seen")) return;
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.body.style.overflow = "hidden";
+    sessionStorage.setItem("learnly-splash-seen", "true");
+    const reveal = window.setTimeout(() => setVisible(true), 0);
+    const close = window.setTimeout(() => setClosing(true), reduced ? 350 : 2050);
+    const remove = window.setTimeout(
+      () => {
+        setVisible(false);
+        document.body.style.overflow = "";
+      },
+      reduced ? 600 : 2450,
+    );
+    return () => {
+      clearTimeout(reveal);
+      clearTimeout(close);
+      clearTimeout(remove);
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div
+      className={`${styles.splash} ${closing ? styles.closing : ""}`}
+      role="status"
+      aria-label="Learnly."
+    >
+      <span aria-hidden className={styles.word}>
+        {[..."Learnly."].map((letter, index) => (
+          <span key={index} style={{ animationDelay: `${index * 150}ms` }}>
+            {letter}
+          </span>
+        ))}
+      </span>
+      <span className="sr-only">Learnly.</span>
+    </div>
+  );
+}

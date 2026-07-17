@@ -1,3 +1,4 @@
+/* The active icon is controlled by the root data-theme attribute. */
 .toggle {
   width: 44px;
   height: 44px;
@@ -30,7 +31,9 @@
 .sun,
 .moon {
   grid-area: 1 / 1;
-  transition: opacity var(--transition-normal), transform var(--transition-normal);
+  transition:
+    opacity var(--transition-normal),
+    transform var(--transition-normal);
 }
 
 .moon {
@@ -47,4 +50,3 @@
   opacity: 1;
   transform: rotate(0) scale(1);
 }
-

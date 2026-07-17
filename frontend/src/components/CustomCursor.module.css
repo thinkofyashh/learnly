@@ -1,44 +1,42 @@
+/* Theme-aware decoration that follows the native desktop cursor. */
 .glow {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 95;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  z-index: 94;
   pointer-events: none;
   opacity: 0;
-  will-change: transform;
-}
-
-.glow {
-  width: 54px;
-  height: 54px;
-  margin: -27px 0 0 -27px;
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    color-mix(in srgb, var(--cursor-accent) 28%, transparent) 0%,
-    color-mix(in srgb, var(--cursor-accent) 10%, transparent) 38%,
-    transparent 70%
+    color-mix(in srgb, var(--cursor-accent) 30%, transparent) 0%,
+    color-mix(in srgb, var(--cursor-accent) 10%, transparent) 44%,
+    transparent 72%
   );
-  filter: blur(7px);
-  transform-origin: center;
+  filter: blur(5px);
+  will-change: transform;
   transition:
-    width var(--transition-normal),
-    height var(--transition-normal),
-    margin var(--transition-normal),
-    opacity var(--transition-normal);
+    width var(--transition-fast),
+    height var(--transition-fast),
+    margin var(--transition-fast),
+    opacity var(--transition-fast);
 }
 
 .glow[data-visible="true"] {
-  opacity: 0.86;
+  opacity: 0.42;
 }
 
-.glow[data-interactive="true"] {
-  width: 72px;
-  height: 72px;
-  margin: -36px 0 0 -36px;
-  opacity: 1;
+.glow[data-pressed="true"] {
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  opacity: 0.68;
 }
 
+/* Pointer decoration is intentionally absent for touch and reduced-motion users. */
 @media (pointer: coarse), (hover: none), (prefers-reduced-motion: reduce) {
   .glow {
     display: none;

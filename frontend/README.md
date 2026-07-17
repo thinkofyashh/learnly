@@ -4,3 +4,4 @@ The Learnly web experience is built with Next.js, React, TypeScript, the App Rou
 
 Run `npm install`, then `npm run dev`. Copy `.env.local.example` to `.env.local` when connecting a backend.
 
+Use `npm run format` to format the frontend and `npm run format:check` to verify formatting without changing files.

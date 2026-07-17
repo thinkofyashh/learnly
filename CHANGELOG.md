@@ -12,4 +12,8 @@
 - Public document library and detail views
 - Administrative upload and processing interfaces
 - Persistent light and dark appearance modes
-- Soft cursor backlight for desktop pointer devices
+- Subtle theme-aware cursor glow with press feedback
+
+### Changed
+
+- Standardized frontend formatting and added focused debugging comments
