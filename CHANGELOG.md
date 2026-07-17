@@ -12,4 +12,4 @@
 - Public document library and detail views
 - Administrative upload and processing interfaces
 - Persistent light and dark appearance modes
-- Styled arrow cursor with a soft desktop backlight
+- Subtle theme-aware cursor glow with press feedback
