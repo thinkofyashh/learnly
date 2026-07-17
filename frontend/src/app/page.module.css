@@ -39,8 +39,8 @@
   font-weight: 700;
 }
 .primary {
-  background: var(--primary);
-  color: white;
+  background: var(--primary-surface);
+  color: var(--on-primary);
 }
 .secondary {
   border: 1px solid var(--border-strong);
@@ -61,7 +61,7 @@
   background-image: repeating-linear-gradient(
     transparent,
     transparent 31px,
-    rgba(23, 76, 60, 0.07) 32px
+    color-mix(in srgb, var(--primary) 10%, transparent) 32px
   );
 }
 .paper small {
@@ -88,8 +88,8 @@
   position: absolute;
   right: -5px;
   bottom: 0;
-  background: var(--primary);
-  color: white;
+  background: var(--primary-surface);
+  color: var(--on-primary);
   padding: 17px 22px;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);

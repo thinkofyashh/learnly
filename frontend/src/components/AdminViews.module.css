@@ -175,8 +175,8 @@
 }
 .choose {
   position: relative;
-  background: var(--primary);
-  color: white;
+  background: var(--primary-surface);
+  color: var(--on-primary);
   padding: 11px 16px;
   border-radius: var(--radius-sm);
   font-weight: 700;
@@ -215,8 +215,8 @@
   margin-top: 24px;
   width: 100%;
   border: 0;
-  background: var(--primary);
-  color: white;
+  background: var(--primary-surface);
+  color: var(--on-primary);
   padding: 13px;
   border-radius: var(--radius-sm);
   font-weight: 700;

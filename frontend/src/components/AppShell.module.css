@@ -7,8 +7,8 @@
   inset: 0 auto 0 0;
   width: 250px;
   padding: 32px 24px;
-  background: var(--primary);
-  color: #f9f5e9;
+  background: var(--primary-surface);
+  color: var(--on-primary);
   z-index: 20;
 }
 .brand {
@@ -97,8 +97,8 @@
   color: var(--text-muted);
 }
 .upload {
-  background: var(--primary);
-  color: white;
+  background: var(--primary-surface);
+  color: var(--on-primary);
   padding: 11px 18px;
   border-radius: var(--radius-sm);
   font-weight: 700;
@@ -107,7 +107,7 @@
     background var(--transition-fast);
 }
 .upload:hover {
-  background: var(--primary-hover);
+  background: var(--primary-surface-hover);
   transform: translateY(-2px);
 }
 .main {

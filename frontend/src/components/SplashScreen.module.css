@@ -4,9 +4,9 @@
   inset: 0;
   display: grid;
   place-items: center;
-  background: var(--primary);
+  background: var(--primary-surface);
   z-index: 100;
-  color: #fffdf8;
+  color: var(--on-primary);
   transition:
     opacity 0.4s ease,
     transform 0.4s ease;

@@ -17,3 +17,4 @@
 ### Changed
 
 - Standardized frontend formatting and added focused debugging comments
+- Refined dark-mode contrast with a premium charcoal-and-jade palette

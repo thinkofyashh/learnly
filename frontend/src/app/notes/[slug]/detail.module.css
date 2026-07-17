@@ -33,8 +33,8 @@
   border: 0;
   padding: 12px 17px;
   border-radius: var(--radius-sm);
-  background: var(--primary);
-  color: white;
+  background: var(--primary-surface);
+  color: var(--on-primary);
   font-weight: 700;
 }
 .actions button:disabled {
@@ -82,7 +82,7 @@
 .preview {
   height: 480px;
   padding: 35px;
-  background: #d8ded8;
+  background: var(--preview-background);
   border-radius: var(--radius-lg);
   display: grid;
   place-items: center;
@@ -113,8 +113,8 @@
   color: var(--text-muted);
 }
 .overview {
-  background: var(--primary);
-  color: white;
+  background: var(--primary-surface);
+  color: var(--on-primary);
   padding: 36px;
   border-radius: var(--radius-lg);
   margin: 25px 0 38px;
