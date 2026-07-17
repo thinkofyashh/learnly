@@ -13,3 +13,7 @@
 - Administrative upload and processing interfaces
 - Persistent light and dark appearance modes
 - Subtle theme-aware cursor glow with press feedback
+
+### Changed
+
+- Standardized frontend formatting and added focused debugging comments

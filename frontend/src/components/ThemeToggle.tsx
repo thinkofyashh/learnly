@@ -14,11 +14,13 @@ export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
+    // Reconcile browser preference and saved choice after hydration, when web APIs are available.
     const savedTheme = localStorage.getItem("learnly-theme") as Theme | null;
     const preferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
       ? "dark"
       : "light";
-    const initialTheme = savedTheme === "dark" || savedTheme === "light" ? savedTheme : preferredTheme;
+    const initialTheme =
+      savedTheme === "dark" || savedTheme === "light" ? savedTheme : preferredTheme;
 
     applyTheme(initialTheme);
     const syncTheme = window.setTimeout(() => setTheme(initialTheme), 0);
@@ -70,4 +72,3 @@ export function ThemeToggle() {
     </button>
   );
 }
-
