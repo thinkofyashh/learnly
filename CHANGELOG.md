@@ -13,7 +13,9 @@
 - Administrative upload and processing interfaces
 - Persistent light and dark appearance modes
 - Subtle theme-aware cursor glow with press feedback
+- Animated Asyncio hero card with reduced-motion support
 
 ### Changed
 
 - Standardized frontend formatting and added focused debugging comments
+- Refined dark-mode contrast with a premium charcoal-and-jade palette
