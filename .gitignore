@@ -18,6 +18,7 @@ backend/__pycache__/
 backend/.pytest_cache/
 backend/storage/
 backend/*.db
+backend/*.egg-info/
 
 # General
 .DS_Store
