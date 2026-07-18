@@ -50,9 +50,25 @@
 .heroCard {
   position: relative;
   padding: 22px;
-  transform: rotate(2deg);
+  isolation: isolate;
+  transform-origin: center;
+  animation: heroCardDrift 7s ease-in-out infinite;
+  will-change: transform;
+}
+.heroCard::before {
+  content: "";
+  position: absolute;
+  inset: 12% 8%;
+  z-index: -1;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--primary) 28%, transparent);
+  filter: blur(34px);
+  opacity: 0.45;
+  animation: heroCardGlow 5s ease-in-out infinite;
 }
 .paper {
+  position: relative;
+  overflow: hidden;
   min-height: 370px;
   padding: 46px;
   background: var(--surface);
@@ -63,6 +79,24 @@
     transparent 31px,
     color-mix(in srgb, var(--primary) 10%, transparent) 32px
   );
+  transition:
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal);
+}
+.paper::after {
+  content: "";
+  position: absolute;
+  inset: -55% auto -55% -35%;
+  width: 34%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--on-primary) 20%, transparent),
+    transparent
+  );
+  pointer-events: none;
+  transform: translateX(-220%) rotate(16deg);
+  animation: heroCardSheen 8s ease-in-out infinite;
 }
 .paper small {
   color: var(--primary);
@@ -94,10 +128,68 @@
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   font-size: 0.72rem;
-  transform: rotate(-4deg);
+  animation: heroBadgeFloat 4.5s ease-in-out infinite;
+  transition: box-shadow var(--transition-normal);
 }
 .float strong {
   font-size: 1.2rem;
+}
+.heroCard:hover,
+.heroCard:hover::before,
+.heroCard:hover .paper::after,
+.heroCard:hover .float {
+  animation-play-state: paused;
+}
+.heroCard:hover .paper {
+  border-color: var(--border-strong);
+  box-shadow: 0 28px 70px color-mix(in srgb, var(--primary) 16%, rgba(0, 0, 0, 0.2));
+}
+.heroCard:hover .float {
+  box-shadow: 0 16px 36px color-mix(in srgb, var(--primary) 22%, rgba(0, 0, 0, 0.2));
+}
+@keyframes heroCardDrift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(2deg);
+  }
+  50% {
+    transform: translate3d(0, -11px, 0) rotate(0.8deg);
+  }
+}
+@keyframes heroCardGlow {
+  0%,
+  100% {
+    opacity: 0.32;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 0.58;
+    transform: scale(1.04);
+  }
+}
+@keyframes heroCardSheen {
+  0%,
+  58% {
+    opacity: 0;
+    transform: translateX(-220%) rotate(16deg);
+  }
+  66% {
+    opacity: 0.6;
+  }
+  82%,
+  100% {
+    opacity: 0;
+    transform: translateX(520%) rotate(16deg);
+  }
+}
+@keyframes heroBadgeFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-4deg);
+  }
+  50% {
+    transform: translate3d(0, -7px, 0) rotate(-2deg);
+  }
 }
 /* Library summary */
 .stats {
@@ -180,5 +272,19 @@
     align-items: start;
     gap: 15px;
     flex-direction: column;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .heroCard,
+  .heroCard::before,
+  .paper::after,
+  .float {
+    animation: none;
+  }
+  .heroCard {
+    transform: rotate(2deg);
+  }
+  .float {
+    transform: rotate(-4deg);
   }
 }
