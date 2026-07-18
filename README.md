@@ -57,3 +57,4 @@ See [the roadmap](docs/roadmap.md) for planned backend integration and post-MVP 
 
 Licensed under the MIT License.
 
+Made with ❤️ by YashTechWorks AI.
