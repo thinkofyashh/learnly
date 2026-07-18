@@ -15,7 +15,7 @@ dependencies=[
 
 [project.optional-dependencies]
 dev=[
-    "httpx",
+    "httpx2",
     "mypy",
     "pytest",
     "ruff"
@@ -38,7 +38,6 @@ strict = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-
 
 
 

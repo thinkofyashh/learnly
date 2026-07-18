@@ -14,6 +14,7 @@
 - Persistent light and dark appearance modes
 - Subtle theme-aware cursor glow with press feedback
 - Animated Asyncio hero card with reduced-motion support
+- FastAPI backend foundation with a versioned health endpoint and automated test coverage
 
 ### Changed
 
