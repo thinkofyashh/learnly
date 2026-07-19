@@ -15,6 +15,7 @@
 - Subtle theme-aware cursor glow with press feedback
 - Animated Asyncio hero card with reduced-motion support
 - FastAPI backend foundation with a versioned health endpoint and automated test coverage
+- Environment-based backend configuration with configurable API routing and CORS controls
 
 ### Changed
 
