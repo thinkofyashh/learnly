@@ -14,6 +14,8 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:3001",
     ]
+    database_url: str = "postgresql+psycopg://learnly:change_me@localhost:5432/learnly"
+    test_database_url: str = "postgresql+psycopg://learnly:change_me@localhost:5432/learnly_test"
 
     model_config = SettingsConfigDict(
         env_file=BACKEND_ROOT / ".env", env_file_encoding="utf-8", extra="ignore"

@@ -16,6 +16,7 @@
 - Animated Asyncio hero card with reduced-motion support
 - FastAPI backend foundation with a versioned health endpoint and automated test coverage
 - Environment-based backend configuration with configurable API routing and CORS controls
+- PostgreSQL connection management with SQLAlchemy, Psycopg, Alembic, database readiness checks, and automated test coverage
 
 ### Changed
 
