@@ -1,0 +1,250 @@
+.stage {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: layout paint;
+}
+
+.craft {
+  --bank: 0deg;
+  --pitch: 0deg;
+  --drift-x: 0px;
+  --flame: 0.82;
+  position: absolute;
+  top: 40%;
+  left: 69%;
+  width: clamp(150px, 14vw, 210px);
+  transform: translate(-50%, -22%);
+  transform-origin: 50% 50%;
+  will-change: transform;
+  perspective: 720px;
+}
+
+.craft svg {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  overflow: visible;
+  transform: translateX(var(--drift-x)) rotateX(var(--pitch)) rotateZ(var(--bank));
+  transform-origin: 50% 48%;
+  transition: transform 90ms linear;
+}
+
+.halo {
+  position: absolute;
+  z-index: 1;
+  top: 20%;
+  left: 50%;
+  width: 78%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(104, 232, 222, 0.22);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(104, 232, 222, 0.18), transparent 67%);
+  box-shadow:
+    0 0 42px rgba(104, 232, 222, 0.12),
+    inset 0 0 24px rgba(154, 124, 255, 0.12);
+  transform: translateX(-50%) rotateX(64deg);
+}
+
+.orbit {
+  fill: none;
+  stroke: rgba(157, 243, 231, 0.42);
+  stroke-width: 2;
+  stroke-dasharray: 5 7;
+  transform: rotate(-17deg);
+  transform-origin: center;
+}
+
+.orbitDot {
+  fill: #d5ff71;
+}
+
+.orbitDotSmall {
+  fill: #9a7cff;
+}
+
+.rocket {
+  transform-origin: 110px 170px;
+}
+
+.body {
+  fill: url("#rocket-body");
+  stroke: #10182c;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+
+.nose {
+  fill: url("#rocket-nose");
+  stroke: #172139;
+  stroke-width: 3;
+}
+
+.sideShade {
+  fill: rgba(24, 33, 65, 0.24);
+}
+
+.leftFin,
+.rightFin {
+  fill: url("#rocket-fin");
+  stroke: #16152f;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+
+.windowRim {
+  fill: #1d2945;
+  stroke: #a9fff6;
+  stroke-width: 3;
+}
+
+.window {
+  fill: url("#rocket-glass");
+  stroke: #0d1830;
+  stroke-width: 3;
+}
+
+.windowShine {
+  fill: rgba(255, 255, 255, 0.8);
+}
+
+.panel,
+.seam {
+  fill: none;
+  stroke: rgba(30, 51, 78, 0.36);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.thruster {
+  fill: #202b46;
+  stroke: #0a0e1c;
+  stroke-width: 4;
+}
+
+.thrusterCore {
+  fill: #d7fff8;
+}
+
+.flame {
+  transform: scaleY(var(--flame));
+  transform-origin: 110px 276px;
+}
+
+.craft[data-moving="true"] .flame {
+  animation: enginePulse 0.25s ease-in-out infinite alternate;
+}
+
+.bubble {
+  position: absolute;
+  z-index: 5;
+  top: 15%;
+  left: 80%;
+  width: max-content;
+  padding: 8px 11px;
+  border: 1px solid rgba(213, 255, 113, 0.42);
+  border-radius: 12px 12px 12px 3px;
+  color: #07100f;
+  background: #d5ff71;
+  font-size: 0.68rem;
+  font-weight: 800;
+  opacity: 0;
+  transform: translateY(5px) scale(0.94);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+.bubble[data-visible="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+.beacon {
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(104, 232, 222, 0.7);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  will-change: transform;
+}
+
+.beacon::before,
+.beacon::after {
+  content: "";
+  position: absolute;
+  background: #68e8de;
+}
+
+.beacon::before {
+  top: 14px;
+  right: -5px;
+  left: -5px;
+  height: 1px;
+}
+
+.beacon::after {
+  top: -5px;
+  bottom: -5px;
+  left: 14px;
+  width: 1px;
+}
+
+.beacon[data-visible="true"] {
+  opacity: 0.65;
+}
+
+@keyframes enginePulse {
+  to {
+    opacity: 0.78;
+    transform: scaleY(calc(var(--flame) * 0.86));
+  }
+}
+
+@media (max-width: 720px), (pointer: coarse), (hover: none) {
+  .craft {
+    top: auto !important;
+    right: 50%;
+    bottom: 58px;
+    left: auto !important;
+    width: 148px;
+    transform: translateX(50%) !important;
+  }
+
+  .craft svg {
+    transform: rotate(-7deg);
+  }
+
+  .beacon,
+  .bubble {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .craft {
+    top: auto !important;
+    right: 22%;
+    bottom: 8%;
+    left: auto !important;
+    transform: none !important;
+  }
+
+  .craft *,
+  .craft svg {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .beacon,
+  .bubble {
+    display: none;
+  }
+}

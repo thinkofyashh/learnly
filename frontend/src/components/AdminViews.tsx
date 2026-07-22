@@ -1,35 +1,71 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { useState } from "react";
 
 import { documents } from "@/mocks/documents";
 
 import { StatusBadge } from "./ui";
 import styles from "./AdminViews.module.css";
 
+export function AdminPageHeader({
+  eyebrow,
+  title,
+  body,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  body: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <header className={styles.pageHeader}>
+      <div>
+        <span className={styles.pageEyebrow}>{eyebrow}</span>
+        <h1>{title}</h1>
+        <p>{body}</p>
+      </div>
+      {children}
+    </header>
+  );
+}
+
 export function AdminDashboard() {
   const processing = documents.filter((document) => document.status === "processing").length;
   const failed = documents.filter((document) => document.status === "failed").length;
   const dashboardStats = [
-    [documents.length, "Total documents"],
-    [documents.filter((document) => document.status === "published").length, "Published"],
-    [processing, "Processing"],
-    [failed, "Needs attention"],
+    [documents.length, "Total documents", "+12% this month"],
+    [
+      documents.filter((document) => document.status === "published").length,
+      "Published",
+      "Ready to explore",
+    ],
+    [processing, "Processing", "Pipeline active"],
+    [failed, "Needs attention", failed ? "Review required" : "All clear"],
   ];
 
   return (
     <>
-      <header className={styles.heading}>
-        <span>Workspace overview</span>
-        <h1>Good afternoon, Yash.</h1>
-        <p>Review your learning library and keep document processing moving.</p>
-      </header>
+      <AdminPageHeader
+        eyebrow="Workspace overview"
+        title="Good afternoon, Yash."
+        body="Your learning library is organized, active, and ready for what comes next."
+      >
+        <div className={styles.headerSignal}>
+          <span>System status</span>
+          <strong>
+            <i /> All services calm
+          </strong>
+        </div>
+      </AdminPageHeader>
       <div className={styles.stats}>
-        {dashboardStats.map(([value, label]) => (
+        {dashboardStats.map(([value, label, note], index) => (
           <div key={label}>
+            <span className={styles.statIndex}>{(index + 1).toString().padStart(2, "0")}</span>
             <strong>{value}</strong>
             <span>{label}</span>
+            <small>{note}</small>
           </div>
         ))}
       </div>
@@ -39,7 +75,9 @@ export function AdminDashboard() {
             <span>Latest activity</span>
             <h2>Recent documents</h2>
           </div>
-          <Link href="/admin/documents">View processing →</Link>
+          <Link href="/admin/documents">
+            View processing <span aria-hidden>↗</span>
+          </Link>
         </div>
         <DocumentTable />
       </section>
@@ -66,8 +104,11 @@ export function DocumentTable() {
           {documents.map((document) => (
             <tr key={document.id}>
               <td>
-                <strong>{document.title ?? document.originalFilename}</strong>
-                <small>{document.originalFilename}</small>
+                <span className={styles.fileIcon}>{document.topics[0]?.slice(0, 1) ?? "D"}</span>
+                <div>
+                  <strong>{document.title ?? document.originalFilename}</strong>
+                  <small>{document.originalFilename}</small>
+                </div>
               </td>
               <td>
                 <StatusBadge status={document.status} />
@@ -80,7 +121,12 @@ export function DocumentTable() {
                 })}
               </td>
               <td>
-                <Link href={`/admin/documents/${document.id}`}>Review →</Link>
+                <Link
+                  href={`/admin/documents/${document.id}`}
+                  aria-label={`Review ${document.title ?? document.originalFilename}`}
+                >
+                  ↗
+                </Link>
               </td>
             </tr>
           ))}
@@ -100,9 +146,7 @@ const pipelineStages = [
 ];
 
 export function Pipeline({ failed = false }: { failed?: boolean }) {
-  // Mock the two pipeline paths shown by the frontend until live job progress is available.
   const activeStageIndex = failed ? 1 : 3;
-
   return (
     <ol className={styles.pipeline}>
       {pipelineStages.map((stage, index) => {
@@ -114,7 +158,6 @@ export function Pipeline({ failed = false }: { failed?: boolean }) {
               : index === activeStageIndex
                 ? "processing"
                 : "pending";
-
         return (
           <li key={stage} className={styles[state]}>
             <span aria-hidden>
@@ -137,43 +180,51 @@ export function UploadForm() {
   return (
     <form
       className={styles.uploadForm}
-      onSubmit={(e) => {
-        e.preventDefault();
-        // Keep the preview honest: selecting a file never sends data without a backend.
+      onSubmit={(event) => {
+        event.preventDefault();
         setMessage("The upload service is not connected yet. Your file has not been sent.");
       }}
     >
       <div className={styles.drop}>
-        <span aria-hidden>↑</span>
-        <h2>{file ? file.name : "Drop a PDF here"}</h2>
+        <div className={styles.uploadOrb}>
+          <span aria-hidden>↑</span>
+        </div>
+        <small>PDF / up to 50 MB</small>
+        <h2>{file ? file.name : "Drop a PDF into the studio"}</h2>
         <p>
           {file
-            ? `${(file.size / 1_000_000).toFixed(1)} MB selected`
-            : "or choose a file from your device"}
+            ? `${(file.size / 1_000_000).toFixed(1)} MB selected and ready`
+            : "or choose a document from your device"}
         </p>
         <label className={styles.choose}>
-          Choose PDF
+          Choose PDF <span aria-hidden>+</span>
           <input
             type="file"
             accept="application/pdf"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
           />
         </label>
       </div>
       <div className={styles.fields}>
+        <div className={styles.formIntro}>
+          <span>Document details</span>
+          <h3>Give it some context.</h3>
+          <p>Optional metadata helps the future processing pipeline understand your material.</p>
+        </div>
         <label>
           Document title
-          <input name="title" placeholder="Optional title" />
+          <input name="title" placeholder="e.g. Operating Systems Notes" />
         </label>
         <label>
           Description
           <textarea name="description" rows={4} placeholder="What does this note cover?" />
         </label>
         <label className={styles.check}>
-          <input type="checkbox" /> Publish after successful processing
+          <input type="checkbox" />
+          <span>Publish after successful processing</span>
         </label>
         <button type="submit" disabled={!file}>
-          Prepare upload
+          Prepare upload <span aria-hidden>↗</span>
         </button>
         {message && (
           <p className={styles.message} role="status">
