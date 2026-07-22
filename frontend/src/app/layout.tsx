@@ -3,8 +3,18 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 import { AppShell } from "@/components/AppShell";
-import { CustomCursor } from "@/components/CustomCursor";
-import { SplashScreen } from "@/components/SplashScreen";
+
+const themeInitializer = `
+  try {
+    const saved = localStorage.getItem("learnly-theme");
+    const theme = saved === "light" || saved === "dark" ? saved : "dark";
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  } catch (_) {
+    document.documentElement.dataset.theme = "dark";
+    document.documentElement.style.colorScheme = "dark";
+  }
+`;
 
 export const metadata: Metadata = {
   title: { default: "Learnly", template: "%s · Learnly" },
@@ -13,10 +23,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
+      </head>
       <body>
-        <SplashScreen />
-        <CustomCursor />
         <AppShell>{children}</AppShell>
       </body>
     </html>
