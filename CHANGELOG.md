@@ -18,6 +18,7 @@
 - Environment-based backend configuration with configurable API routing and CORS controls
 - PostgreSQL connection management with SQLAlchemy, Psycopg, Alembic, database readiness checks, and automated test coverage
 - PostgreSQL document and page persistence with lifecycle enums, JSONB metadata, relational constraints, and a reversible Alembic migration
+- Published document collection and detail APIs with pagination, camelCase responses, visibility rules, and repository-service separation
 
 ### Changed
 
