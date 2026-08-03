@@ -32,3 +32,12 @@ class DocumentRepository:
             Document.status == DocumentStatus.PUBLISHED, Document.slug == slug
         )
         return self.session.scalars(statement).one_or_none()
+
+    def add(self, document: Document) -> Document:
+        self.session.add(document)
+        self.session.flush()
+
+        return document
+
+    def get_by_id(self, document_id: int) -> Document | None:
+        return self.session.get(Document, document_id)

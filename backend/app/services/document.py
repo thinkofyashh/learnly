@@ -21,7 +21,7 @@ class DocumentService:
         pages = (total + limit - 1) // limit if total else 0
 
         return DocumentListResponse(
-            items=[self._build_response(document) for document in documents],
+            items=[self.build_response(document) for document in documents],
             total=total,
             page=page,
             limit=limit,
@@ -34,9 +34,9 @@ class DocumentService:
         if document is None:
             return None
 
-        return self._build_response(document)
+        return self.build_response(document)
 
-    def _build_response(self, document: Document) -> DocumentResponse:
+    def build_response(self, document: Document) -> DocumentResponse:
         base_url = f"{self.api_prefix}/documents/{document.id}"
 
         return DocumentResponse.model_validate(document).model_copy(

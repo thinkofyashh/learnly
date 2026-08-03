@@ -19,6 +19,8 @@
 - PostgreSQL connection management with SQLAlchemy, Psycopg, Alembic, database readiness checks, and automated test coverage
 - PostgreSQL document and page persistence with lifecycle enums, JSONB metadata, relational constraints, and a reversible Alembic migration
 - Published document collection and detail APIs with pagination, camelCase responses, visibility rules, and repository-service separation
+- Secure PDF uploads with validation, SHA-256 checksums, atomic local storage, and transactional cleanup
+- Inline document preview and download endpoints with missing-file and path-traversal protection
 
 ### Changed
 

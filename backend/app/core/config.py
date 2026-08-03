@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://learnly:change_me@localhost:5432/learnly"
     test_database_url: str = "postgresql+psycopg://learnly:change_me@localhost:5432/learnly_test"
 
+    storage_root: Path = BACKEND_ROOT / "storage"
+    max_upload_bytes: int = 25 * 1024 * 1024
+
     model_config = SettingsConfigDict(
         env_file=BACKEND_ROOT / ".env", env_file_encoding="utf-8", extra="ignore"
     )
