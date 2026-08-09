@@ -1,7 +1,7 @@
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
-from app.models import Document, DocumentStatus
+from app.models import Document, DocumentPage, DocumentStatus
 
 
 class DocumentRepository:
@@ -41,3 +41,10 @@ class DocumentRepository:
 
     def get_by_id(self, document_id: int) -> Document | None:
         return self.session.get(Document, document_id)
+
+    def replace_pages(self, *, document_id: int, pages: list[DocumentPage]) -> None:
+        delete_statement = delete(DocumentPage).where(DocumentPage.document_id == document_id)
+
+        self.session.execute(delete_statement)
+        self.session.add_all(pages)
+        self.session.flush()

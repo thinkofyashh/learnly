@@ -1,12 +1,13 @@
 from collections.abc import Generator
 
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.models import Document, DocumentPage, DocumentStatus
+from app.repositories import DocumentRepository
 
 
 @pytest.fixture
@@ -116,3 +117,70 @@ def test_pages_are_deleted_with_their_document(db_session: Session) -> None:
     db_session.flush()
 
     assert db_session.get(DocumentPage, page_id) is None
+
+
+def test_repository_replaces_existing_document_pages(db_session: Session) -> None:
+    document = Document(
+        original_filename="replacement-test.pdf",
+        storage_key="tests/replacement-test.pdf",
+        mime_type="application/pdf",
+        checksum_sha256="d" * 64,
+        size_bytes=2048,
+    )
+
+    document.pages.extend(
+        [
+            DocumentPage(
+                page_number=1,
+                extracted_text="Old first page",
+            ),
+            DocumentPage(
+                page_number=2,
+                extracted_text="Old second page",
+            ),
+        ]
+    )
+
+    db_session.add(document)
+
+    db_session.flush()
+
+    repository = DocumentRepository(db_session)
+
+    replacement_pages = [
+        DocumentPage(
+            document_id=document.id,
+            page_number=1,
+            extracted_text="New first page",
+        ),
+        DocumentPage(
+            document_id=document.id,
+            page_number=2,
+            extracted_text="New second page",
+        ),
+        DocumentPage(
+            document_id=document.id,
+            page_number=3,
+            extracted_text="New third page",
+        ),
+    ]
+
+    repository.replace_pages(
+        document_id=document.id,
+        pages=replacement_pages,
+    )
+
+    stored_pages = list(
+        db_session.scalars(
+            select(DocumentPage)
+            .where(DocumentPage.document_id == document.id)
+            .order_by(DocumentPage.page_number)
+        ).all()
+    )
+
+    assert [page.page_number for page in stored_pages] == [1, 2, 3]
+    assert [page.extracted_text for page in stored_pages] == [
+        "New first page",
+        "New second page",
+        "New third page",
+    ]

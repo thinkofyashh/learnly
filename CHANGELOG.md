@@ -21,6 +21,7 @@
 - Published document collection and detail APIs with pagination, camelCase responses, visibility rules, and repository-service separation
 - Secure PDF uploads with validation, SHA-256 checksums, atomic local storage, and transactional cleanup
 - Inline document preview and download endpoints with missing-file and path-traversal protection
+- Background PDF processing with page-level text extraction, reading estimates, lifecycle tracking, automatic publication, and retry support
 
 ### Changed
 

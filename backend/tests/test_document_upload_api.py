@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.db.session import get_db_session
 from app.main import app
-from app.models import Document
+from app.models import Document, DocumentStatus
 
 
 @pytest.fixture
@@ -33,6 +33,10 @@ def upload_api_context(
         yield session
 
     app.dependency_overrides[get_db_session] = override_db_session
+    monkeypatch.setattr(
+        "app.api.v1.documents.process_document_task",
+        lambda document_id: None,
+    )
 
     try:
         with TestClient(app) as client:
@@ -191,3 +195,101 @@ def test_preview_rejects_unsafe_storage_key(
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Document file not found"
+
+
+def test_upload_endpoint_schedules_processing(
+    upload_api_context: tuple[TestClient, Session, Path],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client, _session, _storage_root = upload_api_context
+    scheduled_document_ids: list[int] = []
+
+    def fake_processing_task(document_id: int) -> None:
+        scheduled_document_ids.append(document_id)
+
+    monkeypatch.setattr(
+        "app.api.v1.documents.process_document_task",
+        fake_processing_task,
+    )
+
+    response = client.post(
+        "/api/v1/documents",
+        files={
+            "file": (
+                "scheduled.pdf",
+                b"%PDF-1.7\nScheduled processing",
+                "application/pdf",
+            )
+        },
+    )
+
+    assert response.status_code == 201
+    assert scheduled_document_ids == [response.json()["id"]]
+
+
+def test_retry_endpoint_schedules_failed_document(
+    upload_api_context: tuple[TestClient, Session, Path],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client, session, _storage_root = upload_api_context
+    scheduled_document_ids: list[int] = []
+
+    document = Document(
+        original_filename="failed.pdf",
+        storage_key="documents/failed.pdf",
+        mime_type="application/pdf",
+        checksum_sha256="a" * 64,
+        size_bytes=100,
+        status=DocumentStatus.FAILED,
+        processing_error="Extraction failed",
+    )
+    session.add(document)
+    session.commit()
+
+    def fake_processing_task(document_id: int) -> None:
+        scheduled_document_ids.append(document_id)
+
+    monkeypatch.setattr(
+        "app.api.v1.documents.process_document_task",
+        fake_processing_task,
+    )
+
+    response = client.post(f"/api/v1/documents/{document.id}/retry")
+
+    assert response.status_code == 202
+    assert response.json()["status"] == "processing"
+    assert document.processing_error is None
+    assert scheduled_document_ids == [document.id]
+
+
+def test_retry_endpoint_returns_404_for_missing_document(
+    upload_api_context: tuple[TestClient, Session, Path],
+) -> None:
+    client, _session, _storage_root = upload_api_context
+
+    response = client.post("/api/v1/documents/999999/retry")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Document not found"
+
+
+def test_retry_endpoint_rejects_non_failed_document(
+    upload_api_context: tuple[TestClient, Session, Path],
+) -> None:
+    client, session, _storage_root = upload_api_context
+
+    document = Document(
+        original_filename="uploaded.pdf",
+        storage_key="documents/uploaded.pdf",
+        mime_type="application/pdf",
+        checksum_sha256="b" * 64,
+        size_bytes=100,
+        status=DocumentStatus.UPLOADED,
+    )
+    session.add(document)
+    session.commit()
+
+    response = client.post(f"/api/v1/documents/{document.id}/retry")
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == ("Only failed documents can be retried")

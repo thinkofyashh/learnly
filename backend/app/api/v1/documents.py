@@ -2,7 +2,17 @@ from collections.abc import Iterator
 from typing import Annotated, BinaryIO
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+    status,
+)
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
@@ -17,9 +27,16 @@ from app.services.document_file import (
     DocumentNotFoundError,
     OpenDocumentFile,
 )
+from app.services.document_processing import (
+    DocumentProcessingService,
+    DocumentRetryNotAllowedError,
+    ProcessingDocumentNotFoundError,
+)
 from app.services.document_upload import DocumentUploadService
+from app.services.pdf_extraction import PdfExtractor
 from app.services.upload_validation import UploadTooLargeError, UploadValidationError
 from app.storage import LocalStorage
+from app.tasks.document_processing import process_document_task
 
 router = APIRouter(
     prefix="/documents",
@@ -79,6 +96,18 @@ def open_document_or_404(*, document_id: int, service: DocumentFileService) -> O
         ) from error
 
 
+def get_document_processing_service(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> DocumentProcessingService:
+    settings = get_settings()
+
+    return DocumentProcessingService(
+        repository=DocumentRepository(session),
+        storage=LocalStorage(settings.storage_root),
+        extractor=PdfExtractor(),
+    )
+
+
 @router.get("", response_model=DocumentListResponse)
 def list_published_documents(
     service: Annotated[DocumentService, Depends(get_document_service)],
@@ -90,6 +119,7 @@ def list_published_documents(
 
 @router.post("", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
 def upload_document(
+    background_tasks: BackgroundTasks,
     file: Annotated[UploadFile, File(description="PDF document to upload")],
     upload_service: Annotated[DocumentUploadService, Depends(get_document_upload_service)],
     document_service: Annotated[DocumentService, Depends(get_document_service)],
@@ -102,6 +132,7 @@ def upload_document(
             source=file.file,
             publish_after_processing=publish_after_processing,
         )
+        background_tasks.add_task(process_document_task, document_id=document.id)
     except UploadTooLargeError as error:
         raise HTTPException(
             status_code=status.HTTP_413_CONTENT_TOO_LARGE,
@@ -148,6 +179,40 @@ def download_document(
             "Content-Length": str(opened_file.document.size_bytes),
         },
     )
+
+
+@router.post(
+    "/{document_id}/retry",
+    response_model=DocumentResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def retry_document(
+    document_id: int,
+    background_tasks: BackgroundTasks,
+    processing_service: Annotated[
+        DocumentProcessingService,
+        Depends(get_document_processing_service),
+    ],
+    document_service: Annotated[DocumentService, Depends(get_document_service)],
+) -> DocumentResponse:
+    try:
+        document = processing_service.prepare_retry(document_id=document_id)
+    except ProcessingDocumentNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
+        ) from error
+    except DocumentRetryNotAllowedError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Only failed documents can be retried",
+        ) from error
+
+    background_tasks.add_task(
+        process_document_task,
+        document_id=document.id,
+    )
+
+    return document_service.build_response(document)
 
 
 @router.get("/{slug}", response_model=DocumentResponse)
