@@ -1,8 +1,10 @@
 from datetime import UTC, datetime
+from pathlib import Path
 
 from app.models import Document, DocumentPage, DocumentStatus
 from app.repositories import DocumentRepository
 from app.services.pdf_extraction import PdfExtractor
+from app.services.slug import generate_unique_slug
 from app.storage import StorageBackend
 
 
@@ -63,6 +65,13 @@ class DocumentProcessingService:
             document.processing_error = None
 
             if document.publish_after_processing:
+                if document.slug is None:
+                    slug_source = document.title or Path(document.original_filename).stem
+
+                    document.slug = generate_unique_slug(
+                        slug_source, slug_exists=self.repository.slug_exists
+                    )
+
                 document.status = DocumentStatus.PUBLISHED
                 document.published_at = processed_at
             else:

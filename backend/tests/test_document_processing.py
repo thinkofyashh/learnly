@@ -188,6 +188,7 @@ def test_processing_publishes_when_requested(db_session: Session, tmp_path: Path
     assert processed_document.status == DocumentStatus.PUBLISHED
     assert processed_document.published_at is not None
     assert processed_document.processed_at is not None
+    assert processed_document.slug == "published"
 
 
 def test_prepare_retry_moves_failed_document_to_processing(

@@ -184,3 +184,24 @@ def test_repository_replaces_existing_document_pages(db_session: Session) -> Non
         "New second page",
         "New third page",
     ]
+
+
+def test_repository_checks_slug_existence(
+    db_session: Session,
+) -> None:
+    document = Document(
+        original_filename="slug-test.pdf",
+        storage_key="tests/slug-test.pdf",
+        mime_type="application/pdf",
+        checksum_sha256="e" * 64,
+        size_bytes=1024,
+        slug="existing-slug",
+    )
+
+    db_session.add(document)
+    db_session.flush()
+
+    repository = DocumentRepository(db_session)
+
+    assert repository.slug_exists("existing-slug") is True
+    assert repository.slug_exists("missing-slug") is False

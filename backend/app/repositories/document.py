@@ -48,3 +48,7 @@ class DocumentRepository:
         self.session.execute(delete_statement)
         self.session.add_all(pages)
         self.session.flush()
+
+    def slug_exists(self, slug: str) -> bool:
+        statement = select(Document.id).where(Document.slug == slug).limit(1)
+        return self.session.scalar(statement) is not None

@@ -32,6 +32,12 @@ from app.services.document_processing import (
     DocumentRetryNotAllowedError,
     ProcessingDocumentNotFoundError,
 )
+from app.services.document_publication import (
+    DocumentNotPublishedError,
+    DocumentNotReadyForPublicationError,
+    DocumentPublicationService,
+    PublicationDocumentNotFoundError,
+)
 from app.services.document_upload import DocumentUploadService
 from app.services.pdf_extraction import PdfExtractor
 from app.services.upload_validation import UploadTooLargeError, UploadValidationError
@@ -106,6 +112,12 @@ def get_document_processing_service(
         storage=LocalStorage(settings.storage_root),
         extractor=PdfExtractor(),
     )
+
+
+def get_document_publication_service(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> DocumentPublicationService:
+    return DocumentPublicationService(repository=DocumentRepository(session=session))
 
 
 @router.get("", response_model=DocumentListResponse)
@@ -211,6 +223,53 @@ def retry_document(
         process_document_task,
         document_id=document.id,
     )
+
+    return document_service.build_response(document)
+
+
+@router.post("/{document_id}/publish", response_model=DocumentResponse)
+def publish_document(
+    document_id: int,
+    publication_service: Annotated[
+        DocumentPublicationService, Depends(get_document_publication_service)
+    ],
+    document_service: Annotated[DocumentService, Depends(get_document_service)],
+) -> DocumentResponse:
+    try:
+        published_document = publication_service.publish(document_id=document_id)
+    except PublicationDocumentNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        ) from error
+    except DocumentNotReadyForPublicationError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Document is not ready for publication",
+        ) from error
+
+    return document_service.build_response(published_document)
+
+
+@router.post("/{document_id}/unpublish", response_model=DocumentResponse)
+def unpublish_document(
+    document_id: int,
+    publication_service: Annotated[
+        DocumentPublicationService, Depends(get_document_publication_service)
+    ],
+    document_service: Annotated[DocumentService, Depends(get_document_service)],
+) -> DocumentResponse:
+    try:
+        document = publication_service.unpublish(document_id=document_id)
+    except PublicationDocumentNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
+        ) from error
+    except DocumentNotPublishedError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Document is not published",
+        ) from error
 
     return document_service.build_response(document)
 

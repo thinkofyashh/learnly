@@ -56,6 +56,30 @@ def make_document(*, slug: str, status: DocumentStatus, checksum_character: str)
     )
 
 
+def make_ready_document(
+    *,
+    filename: str,
+    checksum_character: str,
+    status: DocumentStatus = DocumentStatus.UPLOADED,
+    slug: str | None = None,
+) -> Document:
+    processed_at = datetime.now(UTC)
+
+    return Document(
+        original_filename=filename,
+        storage_key=f"tests/{filename}",
+        mime_type="application/pdf",
+        checksum_sha256=checksum_character * 64,
+        size_bytes=1024,
+        title="API Publication",
+        slug=slug,
+        status=status,
+        page_count=1,
+        processed_at=processed_at,
+        published_at=(processed_at if status == DocumentStatus.PUBLISHED else None),
+    )
+
+
 def test_collection_returns_only_published_documents(
     api_context: tuple[TestClient, Session],
 ) -> None:
@@ -113,6 +137,103 @@ def test_detail_hides_unpublished_documents(api_context: tuple[TestClient, Sessi
     assert published_response.json()["previewUrl"].endswith(f"/documents/{published.id}/preview")
     assert unpublished_response.status_code == 404
     assert missing_document.status_code == 404
+
+
+def test_publish_endpoint_makes_document_public(
+    api_context: tuple[TestClient, Session],
+) -> None:
+    client, session = api_context
+    document = make_ready_document(
+        filename="api-publication.pdf",
+        checksum_character="d",
+    )
+
+    session.add(document)
+    session.flush()
+
+    response = client.post(f"/api/v1/documents/{document.id}/publish")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "published"
+    assert response.json()["slug"] == "api-publication"
+
+    public_response = client.get("/api/v1/documents/api-publication")
+
+    assert public_response.status_code == 200
+
+
+def test_unpublish_endpoint_hides_document(
+    api_context: tuple[TestClient, Session],
+) -> None:
+    client, session = api_context
+    document = make_ready_document(
+        filename="hidden.pdf",
+        checksum_character="e",
+        status=DocumentStatus.PUBLISHED,
+        slug="hidden-document",
+    )
+
+    session.add(document)
+    session.flush()
+
+    response = client.post(f"/api/v1/documents/{document.id}/unpublish")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "uploaded"
+
+    public_response = client.get("/api/v1/documents/hidden-document")
+
+    assert public_response.status_code == 404
+
+
+@pytest.mark.parametrize("operation", ["publish", "unpublish"])
+def test_publication_endpoint_returns_404_for_missing_document(
+    api_context: tuple[TestClient, Session],
+    operation: str,
+) -> None:
+    client, _session = api_context
+
+    response = client.post(f"/api/v1/documents/999999/{operation}")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Document not found"
+
+
+def test_publish_endpoint_rejects_unprocessed_document(
+    api_context: tuple[TestClient, Session],
+) -> None:
+    client, session = api_context
+    document = make_document(
+        slug="unprocessed-document",
+        status=DocumentStatus.UPLOADED,
+        checksum_character="f",
+    )
+
+    session.add(document)
+    session.flush()
+
+    response = client.post(f"/api/v1/documents/{document.id}/publish")
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == ("Document is not ready for publication")
+
+
+def test_unpublish_endpoint_rejects_unpublished_document(
+    api_context: tuple[TestClient, Session],
+) -> None:
+    client, session = api_context
+    document = make_ready_document(
+        filename="not-published.pdf",
+        checksum_character="g",
+    )
+
+    session.add(document)
+    session.flush()
+
+    response = client.post(f"/api/v1/documents/{document.id}/unpublish")
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == ("Document is not published")
 
 
 @pytest.mark.parametrize("query", ["page=0", "limit=0", "limit=101"])
