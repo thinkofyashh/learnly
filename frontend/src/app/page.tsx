@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Atkinson_Hyperlegible, Bricolage_Grotesque, IBM_Plex_Mono } from "next/font/google";
 
 import { RocketHero } from "@/components/RocketHero";
 import { NoteCard } from "@/components/ui";
@@ -6,6 +7,24 @@ import { getPublishedDocuments } from "@/services/api-client";
 import { siteOwner } from "@/site";
 
 import styles from "./page.module.css";
+
+const displayFont = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-learnly-display",
+  weight: "variable",
+});
+
+const bodyFont = Atkinson_Hyperlegible({
+  subsets: ["latin"],
+  variable: "--font-learnly-body",
+  weight: ["400", "700"],
+});
+
+const utilityFont = IBM_Plex_Mono({
+  subsets: ["latin"],
+  variable: "--font-learnly-utility",
+  weight: "500",
+});
 
 const learningFlow = [
   ["01", "Bring the material", "Add a handwritten scan or educational PDF."],
@@ -20,7 +39,9 @@ export default async function Home() {
   const topics = new Set(documents.flatMap((document) => document.topics)).size;
 
   return (
-    <>
+    <div
+      className={`${styles.proofScope} ${displayFont.variable} ${bodyFont.variable} ${utilityFont.variable}`}
+    >
       <section className={styles.hero}>
         <div className={styles.cosmos} aria-hidden />
         <div className={styles.planet} aria-hidden />
@@ -119,6 +140,6 @@ export default async function Home() {
           Upload a document <span>↗</span>
         </Link>
       </section>
-    </>
+    </div>
   );
 }

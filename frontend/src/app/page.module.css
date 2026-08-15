@@ -1,3 +1,34 @@
+.proofScope {
+  --study-paper: #f5f7f4;
+  --study-graphite: #20262f;
+  --study-blue: #3b5ccc;
+  --study-highlighter: #e5f06a;
+  --study-green: #2c7a68;
+  --study-red: #c94b5b;
+  --study-surface: #ffffff;
+  --study-muted: #66707c;
+  --study-line: #cfd6d2;
+  --study-shadow: 0 24px 70px rgba(32, 38, 47, 0.12);
+  color: var(--study-graphite);
+  background: var(--study-paper);
+  font-family: var(--font-learnly-body), "Segoe UI", sans-serif;
+}
+
+.proofScope h1,
+.proofScope h2,
+.proofScope h3 {
+  font-family: var(--font-learnly-display), "Arial Narrow", sans-serif;
+}
+
+:global(:root[data-theme="dark"]) .proofScope {
+  --study-paper: #20262f;
+  --study-graphite: #f5f7f4;
+  --study-surface: #29313b;
+  --study-muted: #c3cbc7;
+  --study-line: #4c5764;
+  --study-shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
+}
+
 .hero {
   --hero-accent: #67f0e7;
   --hero-secondary: #c9ff74;
