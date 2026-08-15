@@ -32,3 +32,4 @@
 - Standardized frontend formatting and added focused debugging comments
 - Refined dark-mode contrast with a premium charcoal-and-jade palette
 - Replaced frontend document fixtures and planned pipeline labels with PostgreSQL-backed API data and actual processing stages
+- Updated project, backend, frontend, API, architecture, and roadmap documentation for the working local MVP

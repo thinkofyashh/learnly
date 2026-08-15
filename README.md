@@ -1,37 +1,56 @@
 # Learnly
 
-Turn handwritten notes into an intelligent learning library.
+Turn educational PDFs into a calm, searchable learning library.
 
-Learnly is a personal learning archive for uploading, organizing, previewing, and sharing handwritten notes and educational PDFs. The current release establishes the complete frontend experience using realistic mock data while the service layer remains ready for a future FastAPI backend.
+Learnly is Yash Rawat's personal learning archive for uploading, processing, reviewing, previewing, and publishing study material. The local MVP connects a Next.js frontend to a FastAPI and PostgreSQL backend, extracts page-level text with PyMuPDF, and provides an administrative publication workflow.
 
-## Features
+## What works today
 
-- Browse and filter a responsive notes library
-- Review structured note overviews, topics, prerequisites, and key takeaways
-- Preview document pages and inspect reading metadata
-- Explore administrative upload, processing, review, and publishing workflows
-- Handle loading, empty, failed, processing, and partial-data states
-- Navigate with accessible keyboard and reduced-motion support
+- Upload and validate PDF files up to a configurable size limit
+- Store original files safely on the local filesystem
+- Persist document records and extracted pages in PostgreSQL
+- Extract page text, page count, and estimated reading time with PyMuPDF
+- Track `uploaded`, `processing`, `published`, and `failed` lifecycle states
+- Retry failed processing and publish or unpublish processed documents
+- Browse published documents and open real PDF previews or downloads
+- Search and filter the administrative document collection
+- Poll active processing records from the frontend
+- Check application liveness and PostgreSQL readiness
 
-## Project status
-
-The frontend foundation is implemented. Backend storage, processing, authentication, and document intelligence are intentionally deferred.
-
-## Structure
-
-```text
-learnly/
-├── frontend/  # Next.js application
-├── backend/   # Planned FastAPI service documentation
-├── docs/      # Architecture, API contract, and roadmap
-└── .github/workflows/
-```
+The current extractor supports text-based PDFs. Handwriting recognition, OCR, generated summaries, embeddings, RAG, learning agents, authentication, cloud storage, and production deployment are later phases.
 
 ## Technology
 
-The frontend uses Next.js, React, TypeScript, the App Router, CSS Modules, native Fetch, and ESLint. The planned backend uses FastAPI, PostgreSQL, SQLAlchemy, PyMuPDF, and background document-processing services.
+- Frontend: Next.js 16, React 19, TypeScript, App Router, and CSS Modules
+- Backend: Python 3.12, FastAPI, Pydantic, SQLAlchemy 2, and Psycopg
+- Data: PostgreSQL 15 and Alembic migrations
+- Documents: PyMuPDF and local filesystem storage
+- Quality: Ruff, mypy, pytest, ESLint, Prettier, and TypeScript
+
+## Repository structure
+
+```text
+learnly/
+├── backend/   # FastAPI service, persistence, processing, migrations, and tests
+├── frontend/  # Next.js public and administrative interfaces
+├── docs/      # Architecture, API contract, and product roadmap
+└── CHANGELOG.md
+```
 
 ## Local setup
+
+You need Python 3.12, Node.js, and PostgreSQL 15. Create the PostgreSQL databases and users first, then follow the detailed [backend setup](backend/README.md) and [frontend setup](frontend/README.md).
+
+Start the backend:
+
+```bash
+cd backend
+source .venv/bin/activate
+alembic upgrade head
+uvicorn app.main:app --reload
+```
+
+Start the frontend in a second terminal:
 
 ```bash
 cd frontend
@@ -40,20 +59,17 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`. The frontend currently uses centralized mock data, so a backend is not required.
+Open `http://localhost:3000`. FastAPI documentation is available at `http://localhost:8000/docs`.
 
-Available commands:
+Administrative write routes currently have no authentication and are intended only for local development.
 
-- `npm run dev` — start the development server
-- `npm run lint` — run lint checks
-- `npm run typecheck` — validate TypeScript
-- `npm run build` — create a production build
+## Documentation
 
-`NEXT_PUBLIC_API_BASE_URL` configures the future REST service URL. It must never contain secrets.
-
-See [the roadmap](docs/roadmap.md) for planned backend integration and post-MVP learning features.
+- [Backend local setup](backend/README.md)
+- [REST API contract](docs/api-contract.md)
+- [Architecture](docs/architecture.md)
+- [Roadmap](docs/roadmap.md)
 
 ## License
 
 Licensed under the MIT License.
-

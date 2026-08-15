@@ -1,21 +1,38 @@
-# Product roadmap
+# Learnly product roadmap
 
-1. **Frontend foundation** — responsive public and administrative interfaces using provisional mock data.
-2. **FastAPI backend foundation** — service structure, configuration, health checks, and API schemas.
-3. **PDF upload and storage** — validation, durable storage, previews, and downloads.
-4. **PostgreSQL and SQLAlchemy** — persistent document and processing records.
-5. **PDF processing** — text extraction, page inspection, and thumbnail generation.
-6. **Structured document metadata** — summaries, topics, prerequisites, and reading estimates.
-7. **Background processing and retries** — reliable jobs, observable stages, and failure recovery.
-8. **Public notes library integration** — connect frontend routes to live data.
-9. **Concurrency improvements** — scale ingestion and read workloads safely.
-10. **Testing and deployment** — comprehensive automation and production operations.
+## Local MVP completed
 
-## Post-MVP
+- Responsive public and administrative Next.js interfaces
+- FastAPI application foundation, configuration, CORS, and health checks
+- PostgreSQL persistence with SQLAlchemy and reversible Alembic migration
+- PDF upload validation, checksums, local storage, preview, and download
+- PyMuPDF page-level text extraction and reading estimates
+- Background processing, failure capture, retry, and automatic publication
+- Manual publish and unpublish controls with unique slugs
+- Public visibility rules and administrative search, filters, sorting, and pagination
+- Live frontend reads, uploads, polling, previews, downloads, and lifecycle controls
+- Automated backend coverage and frontend production-build validation
 
-- Semantic search and embeddings
-- Retrieval-augmented generation with page-level citations
-- Quizzes and flashcards
-- Progress tracking and learning paths
-- Learning agents
+## MVP closeout
 
+- Finalize whether structurally corrupt PDFs are rejected during upload or retained as failed processing records
+- Add authentication before exposing administrative writes outside local development
+- Choose a deployment target and production storage/database services
+
+## Next product phase
+
+1. Add metadata editing for title, description, topic, tags, prerequisites, and difficulty.
+2. Add thumbnail generation and richer public document presentation.
+3. Move extraction to a durable worker with recovery for interrupted jobs.
+4. Add OCR for scanned and handwritten notes.
+5. Add observability for processing duration, failures, and storage health.
+
+## RAG and learning intelligence
+
+1. Chunk extracted page text while retaining document and page references.
+2. Generate embeddings and store a versioned retrieval index.
+3. Add semantic search and page-cited answers.
+4. Add summaries, takeaways, quizzes, and flashcards through reviewable workflows.
+5. Add progress tracking, learning paths, and focused learning agents.
+
+RAG, embeddings, and agents remain downstream consumers of the stable document pipeline rather than responsibilities of upload or storage code.
