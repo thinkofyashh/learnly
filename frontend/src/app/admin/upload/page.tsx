@@ -17,7 +17,7 @@ export default function Upload() {
         </span>
         <h1 style={{ margin: "12px 0" }}>Add to your library.</h1>
         <p style={{ color: "var(--text-secondary)" }}>
-          Select an educational PDF and prepare its metadata for future backend processing.
+          Upload an educational PDF for storage, text extraction, and publication review.
         </p>
       </header>
       <UploadForm />

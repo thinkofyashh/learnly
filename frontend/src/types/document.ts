@@ -2,12 +2,6 @@ export type DocumentStatus = "uploaded" | "processing" | "published" | "failed";
 export type Difficulty = "beginner" | "intermediate" | "advanced";
 export type PipelineState = "pending" | "processing" | "completed" | "failed";
 
-export interface PageOverviewItem {
-  page?: number;
-  section?: string;
-  summary: string;
-}
-
 export interface LearnlyDocument {
   id: number;
   slug: string | null;
@@ -23,7 +17,6 @@ export interface LearnlyDocument {
   tags: string[];
   keyTakeaways: string[];
   prerequisites: string[];
-  pageOverview: PageOverviewItem[];
   difficulty: Difficulty | null;
   estimatedReadingMinutes: number | null;
   pageCount: number | null;
@@ -33,4 +26,12 @@ export interface LearnlyDocument {
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
+}
+
+export interface DocumentListResponse {
+  items: LearnlyDocument[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
 }

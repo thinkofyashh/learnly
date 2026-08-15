@@ -261,6 +261,31 @@ def test_admin_service_builds_paginated_response(db_session: Session) -> None:
     assert response.items[0].preview_url == (f"/api/v1/documents/{final_document.id}/preview")
 
 
+def test_admin_service_gets_document_by_id(db_session: Session) -> None:
+    document = create_document(
+        session=db_session,
+        filename="review.pdf",
+        checksum_character="p",
+        title="Review document",
+        description="Administrative detail",
+        status=DocumentStatus.FAILED,
+        difficulty=DocumentDifficulty.BEGINNER,
+        topics=[],
+    )
+    repository = DocumentRepository(db_session)
+    service = AdminDocumentService(
+        repository=repository,
+        document_service=DocumentService(repository=repository, api_prefix="/api/v1"),
+    )
+
+    response = service.get_document(document_id=document.id)
+
+    assert response is not None
+    assert response.id == document.id
+    assert response.status == DocumentStatus.FAILED
+    assert service.get_document(document_id=999999) is None
+
+
 @pytest.mark.parametrize(
     ("page", "limit"),
     [
@@ -343,6 +368,31 @@ def test_admin_endpoint_returns_all_document_statuses(
         "Alpha",
         "Bravo",
     ]
+
+
+def test_admin_detail_endpoint_returns_any_status(
+    admin_api_client: TestClient,
+    db_session: Session,
+) -> None:
+    document = create_document(
+        session=db_session,
+        filename="private-review.pdf",
+        checksum_character="q",
+        title="Private review",
+        description="Unpublished document",
+        status=DocumentStatus.UPLOADED,
+        difficulty=DocumentDifficulty.BEGINNER,
+        topics=[],
+    )
+
+    response = admin_api_client.get(f"/api/v1/admin/documents/{document.id}")
+    missing_response = admin_api_client.get("/api/v1/admin/documents/999999")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == document.id
+    assert response.json()["status"] == "uploaded"
+    assert missing_response.status_code == 404
+    assert missing_response.json()["detail"] == "Document not found"
 
 
 @pytest.mark.parametrize(

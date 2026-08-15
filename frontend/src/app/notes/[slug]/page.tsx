@@ -1,21 +1,23 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
+import { DocumentActions } from "@/components/DocumentActions";
 import { Badge, formatBytes, NoteCard } from "@/components/ui";
-import { findDocument, publishedDocuments } from "@/mocks/documents";
+import { getPublishedDocument, getPublishedDocuments, resolveApiUrl } from "@/services/api-client";
 
 import styles from "./detail.module.css";
 
-export function generateStaticParams() {
-  // Only published fixtures have public detail routes in the frontend preview.
-  return publishedDocuments.map((document) => ({ slug: document.slug! }));
-}
-
 export default async function Detail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const document = findDocument(slug);
+  const [document, library] = await Promise.all([
+    getPublishedDocument(slug),
+    getPublishedDocuments(1, 3),
+  ]);
 
   if (!document) notFound();
+
+  const previewUrl = resolveApiUrl(document.previewUrl);
+  const downloadUrl = resolveApiUrl(document.downloadUrl);
 
   return (
     <>
@@ -31,10 +33,9 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
             ))}
           </div>
           <h1>{document.title}</h1>
-          <p>{document.description}</p>
+          <p>{document.description ?? "A processed PDF from the Learnly library."}</p>
           <div className={styles.actions}>
-            <button disabled={!document.downloadUrl}>Download original</button>
-            <button className={styles.outline}>Copy share link</button>
+            <DocumentActions downloadUrl={downloadUrl} />
           </div>
         </div>
         <dl>
@@ -61,52 +62,60 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
       <div className={styles.layout}>
         <section>
           <div className={styles.preview}>
-            <div>
-              <span>PDF preview</span>
-              <strong>{document.title}</strong>
-              <small>Preview service will be available after backend integration.</small>
-            </div>
+            {previewUrl ? (
+              <iframe
+                src={previewUrl}
+                title={`Preview of ${document.title ?? document.originalFilename}`}
+              />
+            ) : (
+              <p>Preview unavailable.</p>
+            )}
           </div>
           <article className={styles.overview}>
             <span>Document overview</span>
             <h2>A focused path through the material</h2>
-            <p>{document.description}</p>
+            <p>{document.description ?? "Open the PDF preview to explore this document."}</p>
           </article>
-          <h2>Key takeaways</h2>
-          <ul className={styles.takeaways}>
-            {document.keyTakeaways.map((takeaway, index) => (
-              <li key={takeaway}>
-                <span>{index + 1}</span>
-                {takeaway}
-              </li>
-            ))}
-          </ul>
+          {document.keyTakeaways.length > 0 && (
+            <>
+              <h2>Key takeaways</h2>
+              <ul className={styles.takeaways}>
+                {document.keyTakeaways.map((takeaway, index) => (
+                  <li key={takeaway}>
+                    <span>{index + 1}</span>
+                    {takeaway}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </section>
         <aside>
           <div className={styles.sideCard}>
-            <h3>Inside this note</h3>
-            {document.pageOverview.map((item) => (
-              <div className={styles.toc} key={item.section}>
-                <span>{item.page}</span>
-                <div>
-                  <strong>{item.section}</strong>
-                  <p>{item.summary}</p>
-                </div>
-              </div>
-            ))}
+            <h3>Document details</h3>
+            <p>Original file: {document.originalFilename}</p>
+            <p>
+              Published:{" "}
+              {document.publishedAt
+                ? new Date(document.publishedAt).toLocaleDateString("en-GB")
+                : "—"}
+            </p>
+            <p>Topics: {document.topics.join(", ") || "Not assigned"}</p>
           </div>
-          <div className={styles.sideCard}>
-            <h3>Before you begin</h3>
-            {document.prerequisites.map((prerequisite) => (
-              <p key={prerequisite}>✓ {prerequisite}</p>
-            ))}
-          </div>
+          {document.prerequisites.length > 0 && (
+            <div className={styles.sideCard}>
+              <h3>Before you begin</h3>
+              {document.prerequisites.map((prerequisite) => (
+                <p key={prerequisite}>✓ {prerequisite}</p>
+              ))}
+            </div>
+          )}
         </aside>
       </div>
       <section className={styles.related}>
         <h2>Related notes</h2>
         <div>
-          {publishedDocuments
+          {library.items
             .filter((item) => item.id !== document.id)
             .slice(0, 2)
             .map((item) => (

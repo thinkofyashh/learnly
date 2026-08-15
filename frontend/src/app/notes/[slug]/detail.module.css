@@ -29,19 +29,21 @@
   gap: 10px;
   margin-top: 25px;
 }
-.actions button {
+.actions button,
+.actions a {
   border: 0;
   padding: 12px 17px;
   border-radius: var(--radius-sm);
   background: var(--primary-surface);
   color: var(--on-primary);
   font-weight: 700;
+  cursor: pointer;
 }
 .actions button:disabled {
   opacity: 0.48;
   cursor: not-allowed;
 }
-.actions .outline {
+.actions button:last-child {
   background: var(--surface);
   color: var(--primary);
   border: 1px solid var(--border-strong);
@@ -86,6 +88,13 @@
   border-radius: var(--radius-lg);
   display: grid;
   place-items: center;
+}
+.preview iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface);
 }
 .preview > div {
   width: min(360px, 85%);

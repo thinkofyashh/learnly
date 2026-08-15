@@ -24,8 +24,11 @@
 - Background PDF processing with page-level text extraction, reading estimates, lifecycle tracking, automatic publication, and retry support
 - Manual publication controls with unique slug generation and enforced public visibility rules
 - Administrative document listing with search, lifecycle and metadata filters, safe sorting, and pagination
+- Live frontend integration for public library reads, PDF uploads, processing status, previews, downloads, and publication controls
+- Administrative document detail API for reviewing records in any lifecycle state
 
 ### Changed
 
 - Standardized frontend formatting and added focused debugging comments
 - Refined dark-mode contrast with a premium charcoal-and-jade palette
+- Replaced frontend document fixtures and planned pipeline labels with PostgreSQL-backed API data and actual processing stages

@@ -1,5 +1,5 @@
 from app.repositories import AdminDocumentFilters, AdminDocumentSort, DocumentRepository
-from app.schemas import DocumentListResponse
+from app.schemas import DocumentListResponse, DocumentResponse
 from app.services.document import DocumentService
 
 
@@ -33,3 +33,11 @@ class AdminDocumentService:
             limit=limit,
             pages=pages,
         )
+
+    def get_document(self, *, document_id: int) -> DocumentResponse | None:
+        document = self.repository.get_by_id(document_id=document_id)
+
+        if document is None:
+            return None
+
+        return self.document_service.build_response(document=document)

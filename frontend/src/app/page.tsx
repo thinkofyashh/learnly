@@ -1,11 +1,14 @@
 import Link from "next/link";
 
 import { NoteCard } from "@/components/ui";
-import { publishedDocuments, documents } from "@/mocks/documents";
+import { getPublishedDocuments } from "@/services/api-client";
 
 import styles from "./page.module.css";
 
-export default function Home() {
+export default async function Home() {
+  const library = await getPublishedDocuments();
+  const documents = library.items;
+
   return (
     <>
       <section className={styles.hero}>
@@ -51,7 +54,7 @@ export default function Home() {
       </section>
       <section className={styles.stats}>
         <div>
-          <strong>{publishedDocuments.length}</strong>
+          <strong>{library.total}</strong>
           <span>Published notes</span>
         </div>
         <div>
@@ -73,7 +76,7 @@ export default function Home() {
         <Link href="/notes">View all notes →</Link>
       </section>
       <div className={styles.grid}>
-        {publishedDocuments.slice(0, 3).map((document) => (
+        {documents.slice(0, 3).map((document) => (
           <NoteCard key={document.id} document={document} />
         ))}
       </div>

@@ -1,13 +1,13 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.db.session import get_db_session
 from app.models import DocumentDifficulty, DocumentStatus
 from app.repositories import AdminDocumentFilters, AdminDocumentSort, DocumentRepository
-from app.schemas import DocumentListResponse
+from app.schemas import DocumentListResponse, DocumentResponse
 from app.services import AdminDocumentService, DocumentService
 
 router = APIRouter(prefix="/admin/documents", tags=["admin"])
@@ -41,3 +41,19 @@ def list_admin_documents(
     )
 
     return service.list_documents(filters=filters, sort=sort, page=page, limit=limit)
+
+
+@router.get("/{document_id}", response_model=DocumentResponse)
+def get_admin_document(
+    document_id: int,
+    service: Annotated[AdminDocumentService, Depends(get_admin_document_service)],
+) -> DocumentResponse:
+    document = service.get_document(document_id=document_id)
+
+    if document is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        )
+
+    return document
