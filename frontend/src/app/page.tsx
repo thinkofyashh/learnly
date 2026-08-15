@@ -22,6 +22,7 @@ const utilityFont = IBM_Plex_Mono({
 });
 
 const pageTicks = Array.from({ length: 12 }, (_, index) => index);
+const folioTicks = Array.from({ length: 18 }, (_, index) => index);
 
 export default function Home() {
   return (
@@ -123,6 +124,62 @@ export default function Home() {
             </div>
           </figure>
         </div>
+      </section>
+
+      <section className={styles.folioShowcase} aria-labelledby="folio-title">
+        <header className={styles.folioIntro}>
+          <p>One document, properly placed</p>
+          <h2 id="folio-title">Return to the idea, not the file hunt.</h2>
+          <span>
+            A folio keeps the subject, level, length, and useful context visible before you open a
+            single page.
+          </span>
+        </header>
+
+        <article className={styles.folioCard} aria-labelledby="asyncio-title">
+          <div className={styles.folioSpine} aria-hidden>
+            {folioTicks.map((tick) => (
+              <i key={tick} className={tick === 11 ? styles.folioHighlight : styles.folioIndexed} />
+            ))}
+          </div>
+
+          <div className={styles.folioContent}>
+            <div className={styles.folioTopline}>
+              <span className={styles.folioNumber}>STUDY FOLIO 01</span>
+              <span className={styles.readyLabel}>
+                <i aria-hidden />
+                Ready to study
+              </span>
+            </div>
+
+            <div className={styles.badges} aria-label="Document classification">
+              <span className={styles.topicBadge}>Python</span>
+              <span className={styles.topicBadge}>Concurrency</span>
+              <span className={styles.difficultyBadge}>Intermediate</span>
+            </div>
+
+            <h3 id="asyncio-title">Asyncio Fundamentals</h3>
+            <p className={styles.folioDescription}>
+              A practical guide to event loops, coroutines, tasks, and writing concurrent Python
+              without losing track of the work in flight.
+            </p>
+
+            <dl className={styles.folioMetadata}>
+              <div>
+                <dt>Length</dt>
+                <dd>18 pages</dd>
+              </div>
+              <div>
+                <dt>Reading time</dt>
+                <dd>12 min</dd>
+              </div>
+              <div>
+                <dt>Format</dt>
+                <dd>Searchable PDF</dd>
+              </div>
+            </dl>
+          </div>
+        </article>
       </section>
     </div>
   );

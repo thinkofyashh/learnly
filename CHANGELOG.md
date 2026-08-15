@@ -4,6 +4,7 @@
 
 ### Added
 
+- Curated Asyncio study folio with Page Spine indexing, topic badges, and difficulty metadata
 - Page Spine homepage hero illustrating the transformation from PDF to organized study material
 - Initial Learnly monorepo structure
 - Next.js and TypeScript frontend

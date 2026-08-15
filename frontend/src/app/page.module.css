@@ -405,6 +405,211 @@
   border: 0;
 }
 
+.folioShowcase {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 94px 0 120px;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.72fr) minmax(520px, 1.28fr);
+  gap: clamp(48px, 8vw, 110px);
+  align-items: center;
+  border-top: 1px solid var(--study-line);
+}
+
+.folioIntro > p {
+  margin: 0 0 16px;
+  color: var(--study-green);
+  font-family: var(--font-learnly-utility), monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+:global(:root[data-theme="dark"]) .folioIntro > p {
+  color: var(--study-highlighter);
+}
+
+.folioIntro h2 {
+  margin: 0;
+  font-size: clamp(2.35rem, 4.5vw, 3.8rem);
+  font-weight: 620;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.folioIntro > span {
+  max-width: 460px;
+  margin-top: 22px;
+  display: block;
+  color: var(--study-muted);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.folioCard {
+  position: relative;
+  min-height: 390px;
+  padding: clamp(26px, 4vw, 42px) clamp(24px, 4.5vw, 50px) clamp(28px, 4vw, 44px)
+    clamp(66px, 7vw, 88px);
+  overflow: hidden;
+  border: 1px solid var(--study-line);
+  border-radius: 22px 30px 30px 22px;
+  color: var(--study-graphite);
+  background: var(--study-surface);
+  box-shadow: var(--study-shadow);
+}
+
+.folioCard::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 112px;
+  height: 112px;
+  content: "";
+  border-radius: 112px 0 0;
+  background: color-mix(in srgb, var(--study-blue) 8%, transparent);
+}
+
+.folioSpine {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 46px;
+  padding: 22px 10px;
+  display: grid;
+  gap: 7px;
+  align-content: center;
+  background: #20262f;
+}
+
+.folioSpine i {
+  display: block;
+  height: 4px;
+  border-radius: 99px;
+}
+
+.folioIndexed {
+  background: var(--study-green);
+}
+
+.folioHighlight {
+  outline: 1px solid #20262f;
+  outline-offset: 1px;
+  background: var(--study-highlighter);
+  box-shadow: 0 0 0 1px var(--study-highlighter);
+}
+
+.folioContent {
+  position: relative;
+  z-index: 1;
+}
+
+.folioTopline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.folioNumber,
+.readyLabel,
+.badges span,
+.folioMetadata dt,
+.folioMetadata dd {
+  font-family: var(--font-learnly-utility), monospace;
+}
+
+.folioNumber {
+  color: var(--study-muted);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+}
+
+.readyLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--study-green);
+  font-size: 0.65rem;
+}
+
+:global(:root[data-theme="dark"]) .readyLabel {
+  color: var(--study-highlighter);
+}
+
+.readyLabel i {
+  width: 8px;
+  height: 8px;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+}
+
+.badges {
+  margin-top: 42px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.badges span {
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 0.64rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.topicBadge {
+  color: #f5f7f4;
+  background: var(--study-green);
+}
+
+.difficultyBadge {
+  border: 1px solid #20262f;
+  color: #20262f;
+  background: var(--study-highlighter);
+}
+
+.folioCard h3 {
+  margin: 24px 0 0;
+  font-size: clamp(2.2rem, 4vw, 3.65rem);
+  font-weight: 640;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.folioDescription {
+  max-width: 620px;
+  margin: 18px 0 0;
+  color: var(--study-muted);
+  font-size: 0.96rem;
+  line-height: 1.6;
+}
+
+.folioMetadata {
+  margin: 36px 0 0;
+  padding-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  border-top: 1px solid var(--study-line);
+}
+
+.folioMetadata div {
+  min-width: 0;
+}
+
+.folioMetadata dt {
+  color: var(--study-muted);
+  font-size: 0.56rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.folioMetadata dd {
+  margin: 5px 0 0;
+  font-size: 0.68rem;
+}
+
 @keyframes proof-reveal {
   from {
     opacity: 0;
@@ -433,6 +638,18 @@
 
   .transformation {
     width: min(720px, 100%);
+  }
+
+  .folioShowcase {
+    grid-template-columns: 1fr;
+  }
+
+  .folioIntro {
+    max-width: 650px;
+  }
+
+  .folioCard {
+    width: min(760px, 100%);
   }
 }
 
@@ -498,6 +715,39 @@
     max-width: 125px;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .folioShowcase {
+    width: calc(100% - 24px);
+    padding: 72px 0 90px;
+    gap: 34px;
+  }
+
+  .folioCard {
+    min-height: 0;
+    padding: 24px 18px 26px 58px;
+    border-radius: 18px 22px 22px 18px;
+  }
+
+  .folioSpine {
+    width: 38px;
+    padding-inline: 8px;
+    gap: 6px;
+  }
+
+  .folioTopline {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .badges {
+    margin-top: 28px;
+  }
+
+  .folioMetadata {
+    grid-template-columns: 1fr;
+    gap: 14px;
   }
 }
 
