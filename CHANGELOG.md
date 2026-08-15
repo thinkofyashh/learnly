@@ -8,12 +8,11 @@
 - Next.js and TypeScript frontend
 - Core application shell
 - Responsive learning-library interface
-- Animated Learnly splash screen
 - Public document library and detail views
 - Administrative upload and processing interfaces
 - Persistent light and dark appearance modes
-- Subtle theme-aware cursor glow with press feedback
 - Animated Asyncio hero card with reduced-motion support
+- Interactive rocket hero with pointer motion and a reduced-motion fallback
 - FastAPI backend foundation with a versioned health endpoint and automated test coverage
 - Environment-based backend configuration with configurable API routing and CORS controls
 - PostgreSQL connection management with SQLAlchemy, Psycopg, Alembic, database readiness checks, and automated test coverage
@@ -32,6 +31,8 @@
 - Standardized frontend formatting and added focused debugging comments
 - Refined dark-mode contrast with a premium charcoal-and-jade palette
 - Replaced frontend document fixtures and planned pipeline labels with PostgreSQL-backed API data and actual processing stages
+- Refreshed the responsive public and administrative interfaces with the midnight space theme
+- Replaced the splash screen and custom cursor with the lightweight rocket interaction
 - Updated project, backend, frontend, API, architecture, and roadmap documentation for the working local MVP
 
 ### Fixed

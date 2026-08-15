@@ -28,41 +28,59 @@ export function NotesLibrary({ documents }: { documents: LearnlyDocument[] }) {
   );
 
   return (
-    <>
+    <div className={styles.page}>
       <header className={styles.heading}>
-        <div>
+        <div className={styles.headingCopy}>
           <span>Published library</span>
-          <h1>Notes worth returning to.</h1>
-          <p>Browse concise, structured study material across development and computer science.</p>
+          <h1>
+            Notes for the
+            <br />
+            <em>curious mind.</em>
+          </h1>
+          <p>
+            Structured study material across development and computer science, ready whenever you
+            want to go deeper.
+          </p>
         </div>
-        <strong>
-          {filtered.length.toString().padStart(2, "0")}
-          <small>notes</small>
-        </strong>
+        <div className={styles.count}>
+          <strong>{filtered.length.toString().padStart(2, "0")}</strong>
+          <span>notes in view</span>
+          <div className={styles.countLine}>
+            <span />
+          </div>
+        </div>
       </header>
       <div className={styles.filters}>
-        <label>
+        <label className={styles.search}>
           <span className="sr-only">Search notes</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-4-4" />
+          </svg>
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search notes…"
+            placeholder="Search your library…"
           />
         </label>
-        <label>
-          <span>Difficulty</span>
-          <select value={difficulty} onChange={(event) => setDifficulty(event.target.value)}>
-            <option value="all">All levels</option>
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="advanced">Advanced</option>
-          </select>
-        </label>
+        <div className={styles.difficulty} role="group" aria-label="Filter by difficulty">
+          {["all", "beginner", "intermediate", "advanced"].map((level) => (
+            <button
+              key={level}
+              type="button"
+              onClick={() => setDifficulty(level)}
+              className={difficulty === level ? styles.selected : ""}
+            >
+              {level === "all" ? "All levels" : level}
+              {difficulty === level && <span />}
+            </button>
+          ))}
+        </div>
       </div>
       {filtered.length ? (
         <div className={styles.grid}>
-          {filtered.map((document) => (
-            <NoteCard key={document.id} document={document} />
+          {filtered.map((document, index) => (
+            <NoteCard key={document.id} document={document} index={index} />
           ))}
         </div>
       ) : (
@@ -71,6 +89,6 @@ export function NotesLibrary({ documents }: { documents: LearnlyDocument[] }) {
           body="Try a broader search or clear the selected difficulty."
         />
       )}
-    </>
+    </div>
   );
 }

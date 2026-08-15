@@ -29,6 +29,29 @@ function errorMessage(error: unknown): string {
   return "Something went wrong. Please try again.";
 }
 
+export function AdminPageHeader({
+  eyebrow,
+  title,
+  body,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  body: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <header className={styles.pageHeader}>
+      <div>
+        <span className={styles.pageEyebrow}>{eyebrow}</span>
+        <h1>{title}</h1>
+        <p>{body}</p>
+      </div>
+      {children}
+    </header>
+  );
+}
+
 export function AdminDashboard({
   documents,
   total,
@@ -39,24 +62,37 @@ export function AdminDashboard({
   const processing = documents.filter((document) => document.status === "processing").length;
   const failed = documents.filter((document) => document.status === "failed").length;
   const dashboardStats = [
-    [total, "Total documents"],
-    [documents.filter((document) => document.status === "published").length, "Published"],
-    [processing, "Processing"],
-    [failed, "Needs attention"],
+    [total, "Total documents", "Library total"],
+    [
+      documents.filter((document) => document.status === "published").length,
+      "Published",
+      "Ready to explore",
+    ],
+    [processing, "Processing", processing ? "Pipeline active" : "Queue clear"],
+    [failed, "Needs attention", failed ? "Review required" : "All clear"],
   ];
 
   return (
     <>
-      <header className={styles.heading}>
-        <span>Workspace overview</span>
-        <h1>Good afternoon, Yash.</h1>
-        <p>Review your learning library and keep document processing moving.</p>
-      </header>
+      <AdminPageHeader
+        eyebrow="Workspace overview"
+        title="Good afternoon, Yash."
+        body="Your learning library is organized, active, and ready for what comes next."
+      >
+        <div className={styles.headerSignal}>
+          <span>System status</span>
+          <strong>
+            <i /> Live API connected
+          </strong>
+        </div>
+      </AdminPageHeader>
       <div className={styles.stats}>
-        {dashboardStats.map(([value, label]) => (
+        {dashboardStats.map(([value, label, note], index) => (
           <div key={label}>
+            <span className={styles.statIndex}>{(index + 1).toString().padStart(2, "0")}</span>
             <strong>{value}</strong>
             <span>{label}</span>
+            <small>{note}</small>
           </div>
         ))}
       </div>
@@ -66,7 +102,9 @@ export function AdminDashboard({
             <span>Latest activity</span>
             <h2>Recent documents</h2>
           </div>
-          <Link href="/admin/documents">View processing →</Link>
+          <Link href="/admin/documents">
+            View processing <span aria-hidden>↗</span>
+          </Link>
         </div>
         <DocumentTable documents={documents.slice(0, 8)} />
       </section>
@@ -97,8 +135,11 @@ export function DocumentTable({ documents }: { documents: LearnlyDocument[] }) {
           {documents.map((document) => (
             <tr key={document.id}>
               <td>
-                <strong>{document.title ?? document.originalFilename}</strong>
-                <small>{document.originalFilename}</small>
+                <span className={styles.fileIcon}>{document.topics[0]?.slice(0, 1) ?? "D"}</span>
+                <div>
+                  <strong>{document.title ?? document.originalFilename}</strong>
+                  <small>{document.originalFilename}</small>
+                </div>
               </td>
               <td>
                 <StatusBadge status={document.status} />
@@ -112,7 +153,12 @@ export function DocumentTable({ documents }: { documents: LearnlyDocument[] }) {
                 }).format(new Date(document.updatedAt))}
               </td>
               <td>
-                <Link href={`/admin/documents/${document.id}`}>Review →</Link>
+                <Link
+                  href={`/admin/documents/${document.id}`}
+                  aria-label={`Review ${document.title ?? document.originalFilename}`}
+                >
+                  ↗
+                </Link>
               </td>
             </tr>
           ))}
@@ -220,11 +266,11 @@ export function AdminDocumentsView({ initialData }: { initialData: DocumentListR
 
   return (
     <>
-      <header className={styles.heading}>
-        <span>Document operations</span>
-        <h1>Processing center.</h1>
-        <p>Track uploads, extraction, failures, and publication from the live API.</p>
-      </header>
+      <AdminPageHeader
+        eyebrow="Document operations"
+        title="Processing center."
+        body="Track uploads, extraction, failures, and publication through the live API."
+      />
       <form className={styles.toolbar} onSubmit={submitFilters}>
         <label>
           <span className="sr-only">Search documents</span>
@@ -250,11 +296,11 @@ export function AdminDocumentsView({ initialData }: { initialData: DocumentListR
         <button type="submit">Apply filters</button>
       </form>
       {error && (
-        <p className={styles.error} role="alert">
+        <p className={styles.alert} role="alert">
           {error}
         </p>
       )}
-      <div className={styles.processingGrid}>
+      <div className={styles.processingLayout}>
         <section className={styles.panel}>
           <div className={styles.panelHead}>
             <div>
@@ -264,7 +310,7 @@ export function AdminDocumentsView({ initialData }: { initialData: DocumentListR
           </div>
           <DocumentTable documents={data.items} />
         </section>
-        <aside className={styles.panel}>
+        <aside className={`${styles.panel} ${styles.pipelinePanel}`}>
           <div className={styles.panelHead}>
             <div>
               <span>Pipeline snapshot</span>
@@ -311,15 +357,18 @@ export function UploadForm() {
   return (
     <form className={styles.uploadForm} onSubmit={submitUpload}>
       <div className={styles.drop}>
-        <span aria-hidden>↑</span>
-        <h2>{file ? file.name : "Drop a PDF here"}</h2>
+        <div className={styles.uploadOrb}>
+          <span aria-hidden>↑</span>
+        </div>
+        <small>PDF / up to 25 MB</small>
+        <h2>{file ? file.name : "Drop a PDF into the studio"}</h2>
         <p>
           {file
-            ? `${(file.size / 1_000_000).toFixed(1)} MB selected`
-            : "or choose a file from your device"}
+            ? `${(file.size / 1_000_000).toFixed(1)} MB selected and ready`
+            : "or choose a document from your device"}
         </p>
         <label className={styles.choose}>
-          Choose PDF
+          Choose PDF <span aria-hidden>+</span>
           <input
             type="file"
             accept="application/pdf,.pdf"
@@ -331,21 +380,24 @@ export function UploadForm() {
         </label>
       </div>
       <div className={styles.fields}>
-        <h2>Processing options</h2>
-        <p className={styles.helper}>
-          Learnly will store the PDF, extract page text, calculate its page count and reading time,
-          then keep it ready for review.
-        </p>
+        <div className={styles.formIntro}>
+          <span>Processing options</span>
+          <h3>Prepare the document.</h3>
+          <p>
+            Learnly stores the PDF, extracts each page, and calculates the page count and reading
+            time before publication.
+          </p>
+        </div>
         <label className={styles.check}>
           <input
             type="checkbox"
             checked={publishAfterProcessing}
             onChange={(event) => setPublishAfterProcessing(event.target.checked)}
           />
-          Publish after successful processing
+          <span>Publish after successful processing</span>
         </label>
         <button type="submit" disabled={!file || isUploading}>
-          {isUploading ? "Uploading…" : "Upload and process"}
+          {isUploading ? "Uploading…" : "Upload and process"} <span aria-hidden>↗</span>
         </button>
         {message && (
           <p className={styles.message} role="status">
@@ -405,55 +457,57 @@ export function AdminDocumentReview({ initialDocument }: { initialDocument: Lear
 
   return (
     <>
-      <header className={styles.reviewHeader}>
-        <StatusBadge status={document.status} />
-        <h1>{document.title ?? document.originalFilename}</h1>
-        <p>
-          {document.description ?? "Review the extracted document and control its publication."}
-        </p>
-        <div className={styles.actionButtons}>
-          {previewUrl && (
-            <a href={previewUrl} target="_blank" rel="noreferrer">
-              Preview PDF
-            </a>
-          )}
-          {downloadUrl && <a href={downloadUrl}>Download</a>}
-          {document.status === "failed" && (
-            <button
-              type="button"
-              disabled={Boolean(busyAction)}
-              onClick={() => void runAction("retry", retryDocument)}
-            >
-              {busyAction === "retry" ? "Retrying…" : "Retry processing"}
-            </button>
-          )}
-          {isReadyToPublish && (
-            <button
-              type="button"
-              disabled={Boolean(busyAction)}
-              onClick={() => void runAction("publish", publishDocument)}
-            >
-              {busyAction === "publish" ? "Publishing…" : "Publish"}
-            </button>
-          )}
-          {document.status === "published" && (
-            <button
-              type="button"
-              disabled={Boolean(busyAction)}
-              onClick={() => void runAction("unpublish", unpublishDocument)}
-            >
-              {busyAction === "unpublish" ? "Unpublishing…" : "Unpublish"}
-            </button>
-          )}
+      <AdminPageHeader
+        eyebrow="Metadata review"
+        title={document.title ?? document.originalFilename}
+        body={document.description ?? "Review the extracted document and control its publication."}
+      >
+        <div className={styles.headerActions}>
+          <StatusBadge status={document.status} />
+          <div className={styles.actionButtons}>
+            {previewUrl && (
+              <a href={previewUrl} target="_blank" rel="noreferrer">
+                Preview PDF
+              </a>
+            )}
+            {downloadUrl && <a href={downloadUrl}>Download</a>}
+            {document.status === "failed" && (
+              <button
+                type="button"
+                disabled={Boolean(busyAction)}
+                onClick={() => void runAction("retry", retryDocument)}
+              >
+                {busyAction === "retry" ? "Retrying…" : "Retry processing"}
+              </button>
+            )}
+            {isReadyToPublish && (
+              <button
+                type="button"
+                disabled={Boolean(busyAction)}
+                onClick={() => void runAction("publish", publishDocument)}
+              >
+                {busyAction === "publish" ? "Publishing…" : "Publish"}
+              </button>
+            )}
+            {document.status === "published" && (
+              <button
+                type="button"
+                disabled={Boolean(busyAction)}
+                onClick={() => void runAction("unpublish", unpublishDocument)}
+              >
+                {busyAction === "unpublish" ? "Unpublishing…" : "Unpublish"}
+              </button>
+            )}
+          </div>
         </div>
-        {error && (
-          <p className={styles.error} role="alert">
-            {error}
-          </p>
-        )}
-      </header>
-      <div className={styles.reviewGrid}>
-        <section className={styles.panel}>
+      </AdminPageHeader>
+      {error && (
+        <p className={styles.alert} role="alert">
+          {error}
+        </p>
+      )}
+      <div className={styles.reviewLayout}>
+        <section className={styles.reviewPanel}>
           <h2>Document record</h2>
           <dl className={styles.documentFacts}>
             <div>
@@ -478,11 +532,11 @@ export function AdminDocumentReview({ initialDocument }: { initialDocument: Lear
             </div>
           </dl>
         </section>
-        <aside className={styles.panel}>
+        <aside className={styles.reviewPanel}>
           <h2>Pipeline</h2>
           <Pipeline document={document} />
           {document.processingError && (
-            <p className={styles.error} role="alert">
+            <p className={styles.alert} role="alert">
               {document.processingError}
             </p>
           )}

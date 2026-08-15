@@ -1,52 +1,57 @@
-/* The active icon is controlled by the root data-theme attribute. */
 .toggle {
-  width: 44px;
-  height: 44px;
+  position: relative;
+  width: 42px;
+  height: 42px;
+  padding: 0;
   display: grid;
   place-items: center;
   flex: 0 0 auto;
+  overflow: hidden;
   border: 1px solid var(--border-strong);
-  border-radius: 50%;
+  border-radius: 13px;
   color: var(--text-primary);
   background: var(--surface);
-  box-shadow: var(--shadow-sm);
   cursor: pointer;
-  transition:
-    color var(--transition-fast),
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    transform var(--transition-fast);
 }
 
-.toggle:hover {
-  color: var(--primary);
-  background: var(--surface-hover);
-  transform: translateY(-2px);
-}
-
-.toggle:active {
-  transform: translateY(0) scale(0.94);
-}
-
-.sun,
-.moon {
+.toggle svg {
+  z-index: 2;
   grid-area: 1 / 1;
+  width: 18px;
+  height: 18px;
   transition:
     opacity var(--transition-normal),
     transform var(--transition-normal);
 }
 
+.orbit {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  transition: transform var(--transition-normal);
+}
+
+.sun {
+  opacity: 0;
+  transform: rotate(30deg) scale(0.7);
+}
+
 .moon {
-  opacity: 0;
-  transform: rotate(-30deg) scale(0.75);
-}
-
-:global([data-theme="dark"]) .sun {
-  opacity: 0;
-  transform: rotate(30deg) scale(0.75);
-}
-
-:global([data-theme="dark"]) .moon {
   opacity: 1;
-  transform: rotate(0) scale(1);
+}
+
+:global([data-theme="light"]) .sun {
+  opacity: 1;
+  transform: none;
+}
+
+:global([data-theme="light"]) .moon {
+  opacity: 0;
+  transform: rotate(-30deg) scale(0.7);
+}
+
+.toggle:hover .orbit {
+  transform: scale(1.25);
 }
