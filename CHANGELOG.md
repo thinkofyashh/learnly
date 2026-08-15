@@ -30,6 +30,7 @@
 
 ### Changed
 
+- Documented Page Spine contrast, typography, responsive, motion, and accessibility validation
 - Introduced scoped Page Spine color and typography tokens for the homepage proof of concept
 - Standardized frontend formatting and added focused debugging comments
 - Refined dark-mode contrast with a premium charcoal-and-jade palette
