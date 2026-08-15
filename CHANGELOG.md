@@ -33,3 +33,7 @@
 - Refined dark-mode contrast with a premium charcoal-and-jade palette
 - Replaced frontend document fixtures and planned pipeline labels with PostgreSQL-backed API data and actual processing stages
 - Updated project, backend, frontend, API, architecture, and roadmap documentation for the working local MVP
+
+### Fixed
+
+- Rejected corrupt, unreadable, and password-protected PDFs before storage or database persistence

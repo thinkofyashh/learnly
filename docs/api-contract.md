@@ -57,7 +57,7 @@ Collection responses use this shape:
 | `file`                   | Yes      | PDF upload                   |
 | `publishAfterProcessing` | No       | Boolean; defaults to `false` |
 
-The endpoint returns `400` for invalid PDF metadata or header, `413` for an oversized upload, and `201` after the file and database record are safely created. Processing continues through an in-process FastAPI background task.
+The endpoint returns `400` for invalid metadata, an invalid header, corruption, structural unreadability, or password protection. These rejected uploads create neither a stored file nor a database record. Oversized uploads return `413`; valid uploads return `201` after the file and record are safely created. Processing continues through an in-process FastAPI background task.
 
 ## Document response
 

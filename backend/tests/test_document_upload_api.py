@@ -10,6 +10,7 @@ from app.core.config import get_settings
 from app.db.session import get_db_session
 from app.main import app
 from app.models import Document, DocumentStatus
+from tests.pdf_factory import make_pdf_bytes
 
 
 @pytest.fixture
@@ -18,7 +19,7 @@ def upload_api_context(
 ) -> Generator[tuple[TestClient, Session, Path], None, None]:
     settings = get_settings()
     monkeypatch.setattr(settings, "storage_root", tmp_path)
-    monkeypatch.setattr(settings, "max_upload_bytes", 64)
+    monkeypatch.setattr(settings, "max_upload_bytes", 4096)
 
     engine = create_engine(settings.test_database_url)
     connection = engine.connect()
@@ -57,7 +58,7 @@ def test_upload_endpoint_creates_document_and_stores_pdf(
     upload_api_context: tuple[TestClient, Session, Path],
 ) -> None:
     client, session, storage_root = upload_api_context
-    content = b"%PDF-1.7\nLearnly upload"
+    content = make_pdf_bytes("Learnly upload")
 
     response = client.post(
         "/api/v1/documents",
@@ -104,7 +105,7 @@ def test_upload_endpoint_rejects_oversized_pdf(
         files={
             "file": (
                 "large.pdf",
-                b"%PDF-" + b"x" * 100,
+                b"%PDF-" + b"x" * 5000,
                 "application/pdf",
             )
         },
@@ -124,7 +125,7 @@ def test_document_file_endpoint_returns_stored_pdf(
     upload_api_context: tuple[TestClient, Session, Path], endpoint: str, expected_disposition: str
 ) -> None:
     client, _session, _storage_root = upload_api_context
-    content = b"%PDF-1.7\nLearnly file response"
+    content = make_pdf_bytes("Learnly file response")
 
     upload_response = client.post(
         "/api/v1/documents", files={"file": ("learnly-guide.pdf", content, "application/pdf")}
@@ -158,7 +159,7 @@ def test_preview_returns_404_when_stored_file_is_missing(
     upload_api_context: tuple[TestClient, Session, Path],
 ) -> None:
     client, session, storage_key = upload_api_context
-    content = b"%PDF-1.7\nMissing file test"
+    content = make_pdf_bytes("Missing file test")
 
     upload_response = client.post(
         "/api/v1/documents", files={"file": ("missing.pdf", content, "application/pdf")}
@@ -217,7 +218,7 @@ def test_upload_endpoint_schedules_processing(
         files={
             "file": (
                 "scheduled.pdf",
-                b"%PDF-1.7\nScheduled processing",
+                make_pdf_bytes("Scheduled processing"),
                 "application/pdf",
             )
         },
@@ -225,6 +226,28 @@ def test_upload_endpoint_schedules_processing(
 
     assert response.status_code == 201
     assert scheduled_document_ids == [response.json()["id"]]
+
+
+def test_upload_endpoint_rejects_corrupt_pdf_without_creating_data(
+    upload_api_context: tuple[TestClient, Session, Path],
+) -> None:
+    client, session, storage_root = upload_api_context
+
+    response = client.post(
+        "/api/v1/documents",
+        files={
+            "file": (
+                "corrupt.pdf",
+                b"%PDF-1.7\nThis file has no valid PDF structure",
+                "application/pdf",
+            )
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "PDF is corrupt or unreadable"
+    assert session.scalars(select(Document)).all() == []
+    assert list(storage_root.rglob("*.pdf")) == []
 
 
 def test_retry_endpoint_schedules_failed_document(

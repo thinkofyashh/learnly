@@ -9,6 +9,7 @@ from app.repositories import DocumentRepository
 from app.services.document_upload import DocumentUploadService
 from app.services.upload_validation import UploadValidationError
 from app.storage import LocalStorage
+from tests.pdf_factory import make_pdf_bytes
 
 
 def create_upload_service(tmp_path: Path) -> tuple[DocumentUploadService, Mock, LocalStorage]:
@@ -22,7 +23,7 @@ def create_upload_service(tmp_path: Path) -> tuple[DocumentUploadService, Mock, 
 
 def test_upload_stores_file_and_creates_document(tmp_path: Path) -> None:
     service, session, storage = create_upload_service(tmp_path)
-    content = b"%PDF-1.7\nLearnly Document"
+    content = make_pdf_bytes()
 
     document = service.upload(
         filename="asyncio-fundamentals.pdf",
@@ -69,8 +70,24 @@ def test_upload_removes_file_when_database_commit_fails(tmp_path: Path) -> None:
         service.upload(
             filename="document.pdf",
             content_type="application/pdf",
-            source=BytesIO(b"%PDF-1.7\nLearnly document"),
+            source=BytesIO(make_pdf_bytes()),
         )
 
     session.rollback.assert_called_once()
     assert list(tmp_path.rglob("*.pdf")) == []
+
+
+def test_upload_rejects_corrupt_pdf_before_storage_or_database(tmp_path: Path) -> None:
+    service, session, _storage = create_upload_service(tmp_path=tmp_path)
+
+    with pytest.raises(UploadValidationError, match="corrupt or unreadable"):
+        service.upload(
+            filename="corrupt.pdf",
+            content_type="application/pdf",
+            source=BytesIO(b"%PDF-1.7\nCorrupt document"),
+        )
+
+    assert list(tmp_path.rglob("*.pdf")) == []
+    session.add.assert_not_called()
+    session.flush.assert_not_called()
+    session.commit.assert_not_called()

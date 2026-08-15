@@ -98,14 +98,14 @@ Do not run the downgrade command against a database containing data you need to 
 
 ## Processing behavior
 
-1. The upload endpoint validates the filename, extension, MIME type, PDF header, and size.
+1. The upload endpoint validates the filename, extension, MIME type, PDF header, size, and structural readability.
 2. The file is written to local storage and its PostgreSQL record is created as `uploaded`.
 3. A FastAPI background task changes the record to `processing`.
 4. PyMuPDF extracts page text and stores it in `document_pages`.
 5. Successful processing returns the record to `uploaded`, or publishes it when automatic publication was requested.
 6. Processing exceptions change the record to `failed` and store an error message for retry.
 
-Current upload validation checks the PDF header before storage; deeper structural problems are detected during processing and produce a failed record. The final corrupt-PDF policy is still being evaluated.
+Corrupt, unreadable, empty, or password-protected PDFs are rejected before storage and never create a PostgreSQL record. Failed records remain available only for unexpected problems that occur after a valid upload has entered processing, preserving the retry workflow.
 
 ## MVP limitations
 

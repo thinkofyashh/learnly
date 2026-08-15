@@ -2,15 +2,17 @@ from hashlib import sha256
 from io import BytesIO
 
 import pytest
+
 from app.services.upload_validation import (
     UploadTooLargeError,
     UploadValidationError,
     validate_pdf,
 )
+from tests.pdf_factory import make_password_protected_pdf_bytes, make_pdf_bytes
 
 
 def test_validate_pdf_accepts_valid_file() -> None:
-    content = b"%PDF-1.7\nLearnly test document"
+    content = make_pdf_bytes()
     source = BytesIO(content)
 
     result = validate_pdf(
@@ -96,7 +98,7 @@ def test_validate_pdf_rejects_oversized_file() -> None:
 
 
 def test_validate_pdf_removes_paths_from_filename() -> None:
-    source = BytesIO(b"%PDF-1.7\ncontent")
+    source = BytesIO(make_pdf_bytes())
 
     result = validate_pdf(
         filename="../../document.pdf",
@@ -106,3 +108,31 @@ def test_validate_pdf_removes_paths_from_filename() -> None:
     )
 
     assert result.original_filename == "document.pdf"
+
+
+def test_validate_pdf_rejects_corrupt_structure() -> None:
+    source = BytesIO(b"%PDF-1.7\nThis has a PDF header but no valid structure")
+
+    with pytest.raises(UploadValidationError, match="corrupt or unreadable"):
+        validate_pdf(
+            filename="corrupt.pdf",
+            content_type="application/pdf",
+            source=source,
+            max_upload_bytes=1024,
+        )
+
+    assert source.tell() == 0
+
+
+def test_validate_pdf_rejects_password_protected_file() -> None:
+    source = BytesIO(make_password_protected_pdf_bytes())
+
+    with pytest.raises(UploadValidationError, match="Password-protected"):
+        validate_pdf(
+            filename="protected.pdf",
+            content_type="application/pdf",
+            source=source,
+            max_upload_bytes=4096,
+        )
+
+    assert source.tell() == 0

@@ -15,7 +15,6 @@
 
 ## MVP closeout
 
-- Finalize whether structurally corrupt PDFs are rejected during upload or retained as failed processing records
 - Add authentication before exposing administrative writes outside local development
 - Choose a deployment target and production storage/database services
 

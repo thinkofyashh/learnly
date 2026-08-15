@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path, PurePosixPath
-from typing import BinaryIO
+from typing import Any, BinaryIO, cast
+
+import pymupdf
 
 PDF_SIGNATURE = b"%PDF-"
 PDF_CONTENT_TYPE = "application/pdf"
@@ -60,6 +62,8 @@ def validate_pdf(
         if not signature.startswith(PDF_SIGNATURE):
             raise UploadValidationError("File does not contain a valid PDF signature")
 
+        _validate_pdf_structure(source)
+
         return ValidatedUpload(
             original_filename=original_filename,
             size_bytes=size_bytes,
@@ -87,3 +91,36 @@ def _validate_content_type(content_type: str | None) -> None:
 
     if normalized_content_type != PDF_CONTENT_TYPE:
         raise UploadValidationError("Uploaded file must use the application/pdf content type")
+
+
+def _validate_pdf_structure(source: BinaryIO) -> None:
+    document: Any | None = None
+
+    try:
+        source.seek(0)
+        pdf_content = source.read()
+        document = cast(
+            Any,
+            pymupdf.open(  # type: ignore[no-untyped-call]
+                stream=pdf_content,
+                filetype="pdf",
+            ),
+        )
+
+        if document.needs_pass:
+            raise UploadValidationError("Password-protected PDFs are not supported")
+
+        if document.page_count < 1:
+            raise UploadValidationError("PDF must contain at least one page")
+
+        for page_index in range(document.page_count):
+            document.load_page(page_index)
+    except UploadValidationError:
+        raise
+    except Exception as error:
+        raise UploadValidationError("PDF is corrupt or unreadable") from error
+    finally:
+        if document is not None:
+            document.close()
+
+        source.seek(0)
