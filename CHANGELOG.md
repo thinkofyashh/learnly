@@ -23,6 +23,7 @@
 - Inline document preview and download endpoints with missing-file and path-traversal protection
 - Background PDF processing with page-level text extraction, reading estimates, lifecycle tracking, automatic publication, and retry support
 - Manual publication controls with unique slug generation and enforced public visibility rules
+- Administrative document listing with search, lifecycle and metadata filters, safe sorting, and pagination
 
 ### Changed
 
