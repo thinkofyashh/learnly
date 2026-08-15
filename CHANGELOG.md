@@ -4,6 +4,7 @@
 
 ### Added
 
+- Page Spine homepage hero illustrating the transformation from PDF to organized study material
 - Initial Learnly monorepo structure
 - Next.js and TypeScript frontend
 - Core application shell

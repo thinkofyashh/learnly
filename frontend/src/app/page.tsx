@@ -1,11 +1,6 @@
 import Link from "next/link";
 import { Atkinson_Hyperlegible, Bricolage_Grotesque, IBM_Plex_Mono } from "next/font/google";
 
-import { RocketHero } from "@/components/RocketHero";
-import { NoteCard } from "@/components/ui";
-import { getPublishedDocuments } from "@/services/api-client";
-import { siteOwner } from "@/site";
-
 import styles from "./page.module.css";
 
 const displayFont = Bricolage_Grotesque({
@@ -26,119 +21,108 @@ const utilityFont = IBM_Plex_Mono({
   weight: "500",
 });
 
-const learningFlow = [
-  ["01", "Bring the material", "Add a handwritten scan or educational PDF."],
-  ["02", "Find the structure", "Extract the text and organize every page for review."],
-  ["03", "Keep the context", "Publish the material so it is ready when you return."],
-];
+const pageTicks = Array.from({ length: 12 }, (_, index) => index);
 
-export default async function Home() {
-  const library = await getPublishedDocuments();
-  const documents = library.items;
-  const totalPages = documents.reduce((total, document) => total + (document.pageCount ?? 0), 0);
-  const topics = new Set(documents.flatMap((document) => document.topics)).size;
-
+export default function Home() {
   return (
     <div
       className={`${styles.proofScope} ${displayFont.variable} ${bodyFont.variable} ${utilityFont.variable}`}
     >
-      <section className={styles.hero}>
-        <div className={styles.cosmos} aria-hidden />
-        <div className={styles.planet} aria-hidden />
-        <RocketHero name={siteOwner.name} />
-
-        <div className={styles.heroCopy}>
-          <span className={styles.welcome}>
-            <i /> Welcome back, {siteOwner.name}
-          </span>
-          <h1>Launch every idea into orbit.</h1>
-          <p>
-            Learnly turns scattered notes and dense PDFs into one clear, searchable path through
-            your knowledge.
-          </p>
-          <div className={styles.actions}>
-            <Link href="/notes" className={styles.primary}>
-              Open your library <span>↗</span>
-            </Link>
-            <Link href="/admin/upload" className={styles.secondary}>
-              Add a document
-            </Link>
+      <section className={styles.hero} aria-labelledby="hero-title">
+        <div className={styles.heroLayout}>
+          <div className={styles.heroCopy}>
+            <p className={styles.eyebrow}>
+              <span aria-hidden />
+              Your personal study shelf
+            </p>
+            <h1 id="hero-title">
+              A PDF goes in.
+              <span>A study path comes out.</span>
+            </h1>
+            <p className={styles.intro}>
+              Learnly reads every page, records the useful details, and keeps the document ready for
+              your next study session.
+            </p>
+            <div className={styles.actions}>
+              <Link href="/notes" className={styles.primaryAction}>
+                Browse my shelf
+                <span aria-hidden>↗</span>
+              </Link>
+              <Link href="/admin/upload" className={styles.secondaryAction}>
+                Add a PDF
+              </Link>
+            </div>
+            <p className={styles.heroNote}>PDF · indexed page by page · ready when you return</p>
           </div>
-        </div>
 
-        <div className={styles.heroSignal}>
-          <span>Mission control</span>
-          <strong>
-            {library.total} {library.total === 1 ? "note is" : "notes are"} in orbit
-          </strong>
-        </div>
-        <p className={styles.cursorHint}>
-          <span /> Move your cursor. Your rocket will chart the course.
-        </p>
-      </section>
+          <figure className={styles.transformation} aria-labelledby="transformation-caption">
+            <figcaption id="transformation-caption" className={styles.srOnly}>
+              A raw PDF becomes indexed pages and then an organized study document.
+            </figcaption>
 
-      <section className={styles.pulse} aria-label="Library statistics">
-        <p>Your mission log, at a glance.</p>
-        <div>
-          <strong>{library.total}</strong>
-          <span>Published notes</span>
-        </div>
-        <div>
-          <strong>{totalPages}</strong>
-          <span>Pages organized</span>
-        </div>
-        <div>
-          <strong>{topics}</strong>
-          <span>Topics connected</span>
-        </div>
-      </section>
+            <div className={`${styles.stage} ${styles.rawStage}`}>
+              <div className={styles.stageLabel}>
+                <span>01</span>
+                Raw PDF
+              </div>
+              <div className={styles.pdfStack} aria-hidden>
+                <div className={styles.backPage} />
+                <div className={styles.middlePage} />
+                <div className={styles.pdfPage}>
+                  <span>PDF</span>
+                  <strong>asyncio-fundamentals.pdf</strong>
+                  <small>Dense pages, one file</small>
+                </div>
+              </div>
+            </div>
 
-      <section className={styles.story}>
-        <header>
-          <span>How Learnly works</span>
-          <h2>
-            Less interface.
-            <br />
-            More understanding.
-          </h2>
-          <p>Three quiet steps between a document and something you can actually use.</p>
-        </header>
-        <div className={styles.flow}>
-          {learningFlow.map(([step, title, body]) => (
-            <article key={step}>
-              <span>{step}</span>
-              <h3>{title}</h3>
-              <p>{body}</p>
-            </article>
-          ))}
-        </div>
-      </section>
+            <div className={styles.readingTrack} aria-hidden>
+              <span />
+              <small>pages become searchable</small>
+              <span />
+            </div>
 
-      <section className={styles.featured}>
-        <header>
-          <div>
-            <span>Recently added</span>
-            <h2>Pick up an idea.</h2>
-          </div>
-          <Link href="/notes">See the full library ↗</Link>
-        </header>
-        <div className={styles.grid}>
-          {documents.slice(0, 3).map((document, index) => (
-            <NoteCard key={document.id} document={document} index={index} />
-          ))}
-        </div>
-      </section>
+            <div className={`${styles.stage} ${styles.readingStage}`}>
+              <div className={styles.stageLabel}>
+                <span>02</span>
+                Reading pages
+              </div>
+              <div className={styles.heroSpine}>
+                {pageTicks.map((tick) => (
+                  <i
+                    key={tick}
+                    className={tick === 8 ? styles.highlightedTick : styles.indexedTick}
+                  />
+                ))}
+              </div>
+              <div className={styles.extractedCopy}>
+                <span>PAGE 08</span>
+                <p>Tasks let coroutines run concurrently while you await their results…</p>
+              </div>
+            </div>
 
-      <section className={styles.cta}>
-        <span>Ready when you are</span>
-        <h2>
-          Give the next idea
-          <br />
-          somewhere to land.
-        </h2>
-        <Link href="/admin/upload">
-          Upload a document <span>↗</span>
-        </Link>
+            <div className={styles.readingTrack} aria-hidden>
+              <span />
+              <small>details find their place</small>
+              <span />
+            </div>
+
+            <div className={`${styles.stage} ${styles.readyStage}`}>
+              <div className={styles.stageLabel}>
+                <span>03</span>
+                Study-ready
+              </div>
+              <div className={styles.readyFolio}>
+                <div>
+                  <span>Python · Concurrency</span>
+                  <strong>Asyncio Fundamentals</strong>
+                </div>
+                <p>18 pages</p>
+                <p>12 min read</p>
+              </div>
+            </div>
+          </figure>
+        </div>
       </section>
     </div>
   );
