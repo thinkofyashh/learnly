@@ -1,123 +1,149 @@
 import Link from "next/link";
 
-import { RocketHero } from "@/components/RocketHero";
-import { NoteCard } from "@/components/ui";
+import { DocumentFolio } from "@/components/DocumentFolio";
+import { StudyDeskHero } from "@/components/StudyDeskHero";
 import { getPublishedDocuments } from "@/services/api-client";
-import { siteOwner } from "@/site";
 
 import styles from "./page.module.css";
 
 const learningFlow = [
-  ["01", "Bring the material", "Add a handwritten scan or educational PDF."],
-  ["02", "Find the structure", "Extract the text and organize every page for review."],
-  ["03", "Keep the context", "Publish the material so it is ready when you return."],
+  ["01", "Stored safely", "The original PDF stays available for preview and download."],
+  ["02", "Read page by page", "Learnly extracts the text and records the real page count."],
+  ["03", "Made easier to return to", "Reading time and document details stay beside the file."],
+  ["04", "Published when ready", "Only material you publish appears in the public library."],
 ];
 
 export default async function Home() {
-  const library = await getPublishedDocuments();
+  const library = await getPublishedDocuments(1, 100);
   const documents = library.items;
   const totalPages = documents.reduce((total, document) => total + (document.pageCount ?? 0), 0);
-  const topics = new Set(documents.flatMap((document) => document.topics)).size;
+  const topicCounts = new Map<string, number>();
+
+  documents.forEach((document) => {
+    document.topics.forEach((topic) => topicCounts.set(topic, (topicCounts.get(topic) ?? 0) + 1));
+  });
+
+  const topics = [...topicCounts.entries()]
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+    .slice(0, 6);
 
   return (
     <>
-      <section className={styles.hero}>
-        <div className={styles.cosmos} aria-hidden />
-        <div className={styles.planet} aria-hidden />
-        <RocketHero name={siteOwner.name} />
+      <StudyDeskHero document={documents[0] ?? null} />
 
-        <div className={styles.heroCopy}>
-          <span className={styles.welcome}>
-            <i /> Welcome back, {siteOwner.name}
-          </span>
-          <h1>Launch every idea into orbit.</h1>
-          <p>
-            Learnly turns scattered notes and dense PDFs into one clear, searchable path through
-            your knowledge.
-          </p>
-          <div className={styles.actions}>
-            <Link href="/notes" className={styles.primary}>
-              Open your library <span>↗</span>
-            </Link>
-            <Link href="/admin/upload" className={styles.secondary}>
-              Add a document
-            </Link>
-          </div>
-        </div>
-
-        <div className={styles.heroSignal}>
-          <span>Mission control</span>
-          <strong>
-            {library.total} {library.total === 1 ? "note is" : "notes are"} in orbit
-          </strong>
-        </div>
-        <p className={styles.cursorHint}>
-          <span /> Move your cursor. Your rocket will chart the course.
-        </p>
-      </section>
-
-      <section className={styles.pulse} aria-label="Library statistics">
-        <p>Your mission log, at a glance.</p>
-        <div>
-          <strong>{library.total}</strong>
-          <span>Published notes</span>
-        </div>
-        <div>
-          <strong>{totalPages}</strong>
-          <span>Pages organized</span>
-        </div>
-        <div>
-          <strong>{topics}</strong>
-          <span>Topics connected</span>
-        </div>
-      </section>
-
-      <section className={styles.story}>
+      <section className={styles.receipts} aria-labelledby="receipts-title">
         <header>
-          <span>How Learnly works</span>
-          <h2>
-            Less interface.
+          <span>Everything you kept</span>
+          <h2 id="receipts-title">
+            Your brain
             <br />
-            More understanding.
+            has receipts.
           </h2>
-          <p>Three quiet steps between a document and something you can actually use.</p>
+          <p>Every saved page is one less useful idea left buried in a downloads folder.</p>
         </header>
-        <div className={styles.flow}>
-          {learningFlow.map(([step, title, body]) => (
-            <article key={step}>
-              <span>{step}</span>
-              <h3>{title}</h3>
-              <p>{body}</p>
-            </article>
-          ))}
+        <div className={styles.receiptGrid}>
+          <article>
+            <span>Published material</span>
+            <strong>{library.total.toString().padStart(2, "0")}</strong>
+            <small>PDFs ready to revisit</small>
+          </article>
+          <article>
+            <span>Pages on your desk</span>
+            <strong>{totalPages.toLocaleString()}</strong>
+            <small>Pages organized by Learnly</small>
+          </article>
+          <article>
+            <span>Subjects collected</span>
+            <strong>{topicCounts.size.toString().padStart(2, "0")}</strong>
+            <small>Topics connected to documents</small>
+          </article>
         </div>
       </section>
 
-      <section className={styles.featured}>
-        <header>
+      <section className={styles.recent} aria-labelledby="recent-title">
+        <header className={styles.sectionHeading}>
           <div>
-            <span>Recently added</span>
-            <h2>Pick up an idea.</h2>
+            <span>Recently placed on the desk</span>
+            <h2 id="recent-title">Worth another look.</h2>
           </div>
-          <Link href="/notes">See the full library ↗</Link>
+          <Link href="/notes">Explore the full library ↗</Link>
         </header>
-        <div className={styles.grid}>
-          {documents.slice(0, 3).map((document, index) => (
-            <NoteCard key={document.id} document={document} index={index} />
-          ))}
-        </div>
+
+        {documents.length > 0 ? (
+          <div className={styles.documentGrid}>
+            {documents.slice(0, 4).map((document, index) => (
+              <DocumentFolio
+                key={document.id}
+                document={document}
+                index={index}
+                featured={index === 0}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className={styles.emptyDesk}>
+            <span aria-hidden>⌁</span>
+            <h3>Nothing on the desk yet.</h3>
+            <p>Give your future self something useful to return to.</p>
+            <Link href="/admin/upload">Add your first PDF</Link>
+          </div>
+        )}
       </section>
 
-      <section className={styles.cta}>
-        <span>Ready when you are</span>
+      <section className={styles.transformation} aria-labelledby="transformation-title">
+        <header>
+          <span>What happens to a PDF</span>
+          <h2 id="transformation-title">A file becomes a place to continue.</h2>
+          <p>
+            Learnly keeps the processing visible and understandable without pretending to know more
+            than the backend reports.
+          </p>
+        </header>
+        <ol>
+          {learningFlow.map(([step, title, body]) => (
+            <li key={step}>
+              <span>{step}</span>
+              <div>
+                <h3>{title}</h3>
+                <p>{body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {topics.length > 0 ? (
+        <section className={styles.topics} aria-labelledby="topics-title">
+          <header className={styles.sectionHeading}>
+            <div>
+              <span>Subject shelves</span>
+              <h2 id="topics-title">Follow what keeps showing up.</h2>
+            </div>
+          </header>
+          <div>
+            {topics.map(([topic, count], index) => (
+              <Link
+                key={topic}
+                href={`/notes?topic=${encodeURIComponent(topic)}`}
+                data-tone={index % 4}
+              >
+                <span>{topic}</span>
+                <strong>{count}</strong>
+                <small>{count === 1 ? "document" : "documents"}</small>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <section className={styles.closing}>
+        <span>The next useful thing</span>
         <h2>
-          Give the next idea
+          Put it somewhere
           <br />
-          somewhere to land.
+          you will find again.
         </h2>
-        <Link href="/admin/upload">
-          Upload a document <span>↗</span>
-        </Link>
+        <Link href="/admin/upload">+ Add something worth remembering</Link>
       </section>
     </>
   );

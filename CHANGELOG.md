@@ -28,6 +28,7 @@
 
 ### Changed
 
+- Reimagined the homepage as a personal study desk with the Paper Bloom transformation story and live library material
 - Established the warm paper design system, typography, light-default theme, and compact workspace navigation
 - Clarified roadmap language for future automated metadata capabilities
 - Standardized frontend formatting and added focused debugging comments
