@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { documentLifecycle } from "@/lib/document-lifecycle";
 import type { LearnlyDocument } from "@/types/document";
 
 import styles from "./ui.module.css";
@@ -59,8 +60,17 @@ export function NoteCard({ document, index = 0 }: { document: LearnlyDocument; i
   );
 }
 
-export function StatusBadge({ status }: { status: LearnlyDocument["status"] }) {
-  return <Badge tone={status}>{status}</Badge>;
+export function StatusBadge({ document }: { document: LearnlyDocument }) {
+  const lifecycle = documentLifecycle(document);
+  const tone = {
+    waiting: "waiting",
+    reading: "processing",
+    ready: "ready",
+    published: "published",
+    attention: "failed",
+  }[lifecycle.key];
+
+  return <Badge tone={tone}>{lifecycle.label}</Badge>;
 }
 
 export function EmptyState({ title, body }: { title: string; body: string }) {

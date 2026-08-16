@@ -1,4 +1,5 @@
-import { AdminPageHeader, UploadForm } from "@/components/AdminViews";
+import { AdminPageHeader } from "@/components/AdminViews";
+import { UploadExperience } from "@/components/UploadExperience";
 
 export default function Upload() {
   return (
@@ -8,7 +9,7 @@ export default function Upload() {
         title="Add to your library."
         body="Upload an educational PDF for storage, text extraction, and publication review."
       />
-      <UploadForm />
+      <UploadExperience />
     </>
   );
 }

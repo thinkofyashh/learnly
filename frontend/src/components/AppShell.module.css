@@ -113,8 +113,10 @@
   align-items: center;
   gap: 9px;
   border-radius: 12px;
+  border: 0;
   color: var(--paper);
   background: var(--ink);
+  cursor: pointer;
   font-size: 0.76rem;
   font-weight: 680;
   transition:
@@ -159,16 +161,47 @@
 }
 
 .adminHeader {
-  width: min(1320px, calc(100% - 36px));
+  top: 18px;
+  bottom: 18px;
+  left: 18px;
+  width: 208px;
+  min-height: 0;
+  padding: 20px 14px;
+  align-items: stretch;
+  flex-direction: column;
+  border-radius: 24px;
+  transform: none;
 }
 
 .adminNav {
-  margin-right: auto;
+  margin: 30px 0 auto;
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.adminNav a {
+  justify-content: space-between;
+}
+
+.adminHeader .headerActions {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.adminHeader .addAction {
+  justify-content: space-between;
+}
+
+.railNote {
+  margin: 18px 2px 0;
+  color: var(--ink-faint);
+  font-size: 0.66rem;
+  line-height: 1.45;
 }
 
 .workspaceIntro {
-  width: min(1320px, calc(100% - 44px));
-  margin: 0 auto;
+  width: min(1320px, calc(100% - 276px));
+  margin: 0 24px 0 248px;
   padding: 118px 4px 0;
   display: flex;
   align-items: center;
@@ -188,9 +221,9 @@
 }
 
 .adminMain {
-  width: min(1320px, calc(100% - 44px));
+  width: min(1320px, calc(100% - 276px));
   min-height: 76vh;
-  margin: 0 auto;
+  margin: 0 24px 0 248px;
   padding: clamp(42px, 6vw, 82px) 4px 110px;
 }
 
@@ -205,6 +238,16 @@
     width: calc(100% - 22px);
     min-height: 58px;
     padding-left: 12px;
+  }
+
+  .adminHeader {
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    align-items: center;
+    flex-direction: row;
+    border-radius: 19px;
+    transform: translateX(-50%);
   }
 
   .publicNav,
@@ -238,12 +281,17 @@
     backdrop-filter: blur(18px);
   }
 
-  .mobileNav a {
+  .mobileNav a,
+  .mobileNav button {
     min-height: 48px;
+    padding: 0;
     display: grid;
     place-items: center;
+    border: 0;
     border-radius: 14px;
     color: var(--ink-faint);
+    background: transparent;
+    cursor: pointer;
     font-size: 0.65rem;
     font-weight: 630;
     text-align: center;
@@ -272,7 +320,18 @@
   }
 
   .workspaceIntro {
+    width: min(1320px, calc(100% - 44px));
+    margin: 0 auto;
     padding-top: 96px;
+  }
+
+  .adminMain {
+    width: min(1320px, calc(100% - 44px));
+    margin: 0 auto;
+  }
+
+  .railNote {
+    display: none;
   }
 
   .workspaceIntro p {

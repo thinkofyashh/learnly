@@ -1,0 +1,80 @@
+.backdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  padding: 18px;
+  overflow-y: auto;
+  background: color-mix(in srgb, var(--ink) 42%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.sheet {
+  width: min(1280px, 100%);
+  min-height: calc(100vh - 36px);
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 54px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--desk);
+  box-shadow: var(--shadow-float);
+}
+
+.sheet > header {
+  margin-bottom: clamp(34px, 6vw, 70px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.sheet > header span {
+  color: var(--ink-faint);
+  font-family: var(--font-learnly-mono), monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.sheet > header h1 {
+  max-width: 900px;
+  margin: 16px 0 0;
+  font-size: clamp(3rem, 7vw, 7rem);
+}
+
+.sheet > header button {
+  min-height: 42px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--paper);
+  cursor: pointer;
+}
+
+.sheet kbd {
+  color: var(--ink-faint);
+  font-size: 0.62rem;
+}
+
+@media (max-width: 700px) {
+  .backdrop {
+    padding: 0;
+  }
+
+  .sheet {
+    min-height: 100vh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .sheet > header {
+    flex-direction: column-reverse;
+  }
+
+  .sheet > header button {
+    align-self: flex-end;
+  }
+}

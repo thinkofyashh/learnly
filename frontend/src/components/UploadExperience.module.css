@@ -1,0 +1,227 @@
+.form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.72fr);
+  gap: clamp(18px, 3vw, 34px);
+}
+
+.dropZone,
+.options {
+  min-width: 0;
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+}
+
+.dropZone {
+  position: relative;
+  min-height: 560px;
+  padding: clamp(34px, 6vw, 72px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px dashed var(--line-strong);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--motion-quick),
+    background var(--motion-quick),
+    transform var(--motion-quick);
+}
+
+.dropZone:hover,
+.dropZone:focus-within,
+.dragging {
+  border-color: var(--leaf);
+  background: color-mix(in srgb, var(--leaf-wash) 24%, var(--paper));
+  transform: translateY(-3px);
+}
+
+.dragging {
+  border-style: solid;
+}
+
+.dropZone input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.dropZone > div:first-child {
+  margin-bottom: 36px;
+  transform: scale(0.72);
+}
+
+.limit,
+.optionLabel {
+  color: var(--ink-faint);
+  font-family: var(--font-learnly-mono), monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.dropZone > strong {
+  max-width: 650px;
+  margin: 18px 0 12px;
+  font-size: clamp(2.3rem, 4.5vw, 4.8rem);
+  letter-spacing: -0.06em;
+  line-height: 0.95;
+  overflow-wrap: anywhere;
+}
+
+.dropZone > p {
+  max-width: 440px;
+  margin-bottom: 25px;
+  color: var(--ink-soft);
+}
+
+.choose {
+  min-height: 46px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 11px;
+  color: var(--paper);
+  background: var(--ink);
+  font-size: 0.76rem;
+  font-weight: 680;
+}
+
+.options {
+  padding: clamp(28px, 4vw, 48px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+}
+
+.options h2 {
+  margin: 18px 0;
+  font-size: clamp(2.2rem, 4vw, 4.2rem);
+}
+
+.options > div > p {
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+}
+
+.publishOption {
+  margin-top: auto;
+  padding: 20px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.publishOption input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex: 0 0 auto;
+  accent-color: var(--leaf);
+}
+
+.publishOption span {
+  display: grid;
+  gap: 4px;
+}
+
+.publishOption strong {
+  font-size: 0.82rem;
+}
+
+.publishOption small {
+  color: var(--ink-faint);
+  font-size: 0.7rem;
+}
+
+.options > button {
+  min-height: 50px;
+  margin-top: 22px;
+  padding: 0 17px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 0;
+  border-radius: 12px;
+  color: var(--paper);
+  background: var(--ink);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 680;
+  transition:
+    transform var(--motion-quick),
+    opacity var(--motion-quick);
+}
+
+.options > button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.options > button:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+.options > button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.feedback,
+.error {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  color: var(--success);
+  background: var(--success-wash);
+  font-size: 0.72rem;
+}
+
+.error {
+  color: var(--danger);
+  background: var(--danger-wash);
+}
+
+@media (max-width: 900px) {
+  .form {
+    grid-template-columns: 1fr;
+  }
+
+  .dropZone {
+    min-height: 480px;
+  }
+
+  .publishOption {
+    margin-top: 48px;
+  }
+}
+
+@media (max-width: 560px) {
+  .dropZone {
+    min-height: 430px;
+    padding: 30px 22px;
+  }
+
+  .dropZone > div:first-child {
+    margin-bottom: 20px;
+    transform: scale(0.58);
+  }
+
+  .options {
+    padding: 26px 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dropZone,
+  .options > button {
+    transition: none;
+  }
+}

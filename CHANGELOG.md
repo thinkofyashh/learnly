@@ -6,6 +6,7 @@
 
 - Full-library search, topic collection routes, and frontend pagination across published documents
 - Editorial document reading pages with live PDF previews, honest metadata, and related material
+- Reusable PDF upload sheet and a paper-desk learning studio with truthful lifecycle controls
 - Initial Learnly monorepo structure
 - Next.js and TypeScript frontend
 - Core application shell

@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import type { FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { documentLifecycle, lifecycleSequence, type LifecycleKey } from "@/lib/document-lifecycle";
 import {
   ApiError,
   getAdminDocument,
@@ -12,21 +14,27 @@ import {
   resolveApiUrl,
   retryDocument,
   unpublishDocument,
-  uploadDocument,
 } from "@/services/api-client";
-import type {
-  DocumentListResponse,
-  DocumentStatus,
-  LearnlyDocument,
-  PipelineState,
-} from "@/types/document";
+import type { DocumentListResponse, DocumentStatus, LearnlyDocument } from "@/types/document";
 
 import { StatusBadge } from "./ui";
 import styles from "./AdminViews.module.css";
 
 function errorMessage(error: unknown): string {
   if (error instanceof ApiError) return error.message;
-  return "Something went wrong. Please try again.";
+  return "The studio could not reach Learnly. Check that FastAPI is running, then try again.";
+}
+
+function documentTitle(document: LearnlyDocument): string {
+  return document.title?.trim() || document.originalFilename;
+}
+
+function formatUpdatedAt(value: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  }).format(new Date(value));
 }
 
 export function AdminPageHeader({
@@ -59,52 +67,57 @@ export function AdminDashboard({
   documents: LearnlyDocument[];
   total: number;
 }) {
-  const processing = documents.filter((document) => document.status === "processing").length;
-  const failed = documents.filter((document) => document.status === "failed").length;
-  const dashboardStats = [
-    [total, "Total documents", "Library total"],
-    [
-      documents.filter((document) => document.status === "published").length,
-      "Published",
-      "Ready to explore",
-    ],
-    [processing, "Processing", processing ? "Pipeline active" : "Queue clear"],
-    [failed, "Needs attention", failed ? "Review required" : "All clear"],
+  const published = documents.filter((document) => document.status === "published").length;
+  const inProgress = documents.filter(
+    (document) =>
+      document.status === "processing" ||
+      (document.status === "uploaded" && document.pageCount === null),
+  ).length;
+  const ready = documents.filter(
+    (document) => document.status === "uploaded" && document.pageCount !== null,
+  ).length;
+  const needsAttention = documents.filter((document) => document.status === "failed").length;
+  const stats = [
+    { value: total, label: "On your desk", note: "Every saved document", color: "sun" },
+    { value: inProgress, label: "Being read", note: "Waiting or processing", color: "sky" },
+    { value: ready, label: "Ready for you", note: "Review before publishing", color: "peach" },
+    {
+      value: published,
+      label: "In the library",
+      note: needsAttention ? `${needsAttention} needs attention` : "No documents need attention",
+      color: "leaf",
+    },
   ];
 
   return (
     <>
       <AdminPageHeader
-        eyebrow="Workspace overview"
-        title="Good afternoon, Yash."
-        body="Your learning library is organized, active, and ready for what comes next."
+        eyebrow="Studio overview"
+        title="Your learning desk, at a glance."
+        body="See what is being read, what needs your review, and what is already on the public shelf."
       >
-        <div className={styles.headerSignal}>
-          <span>System status</span>
-          <strong>
-            <i /> Live API connected
-          </strong>
-        </div>
+        <Link className={styles.headerLink} href="/admin/upload">
+          Add a PDF <span aria-hidden>↗</span>
+        </Link>
       </AdminPageHeader>
-      <div className={styles.stats}>
-        {dashboardStats.map(([value, label, note], index) => (
-          <div key={label}>
-            <span className={styles.statIndex}>{(index + 1).toString().padStart(2, "0")}</span>
-            <strong>{value}</strong>
-            <span>{label}</span>
-            <small>{note}</small>
-          </div>
+
+      <section className={styles.stats} aria-label="Library summary">
+        {stats.map((stat) => (
+          <article key={stat.label} data-color={stat.color}>
+            <strong>{stat.value}</strong>
+            <span>{stat.label}</span>
+            <small>{stat.note}</small>
+          </article>
         ))}
-      </div>
-      <section className={styles.panel}>
-        <div className={styles.panelHead}>
+      </section>
+
+      <section className={styles.documentSection}>
+        <div className={styles.sectionHeading}>
           <div>
-            <span>Latest activity</span>
-            <h2>Recent documents</h2>
+            <span>Latest movement</span>
+            <h2>Recently touched.</h2>
           </div>
-          <Link href="/admin/documents">
-            View processing <span aria-hidden>↗</span>
-          </Link>
+          <Link href="/admin/documents">Open processing ↗</Link>
         </div>
         <DocumentTable documents={documents.slice(0, 8)} />
       </section>
@@ -112,9 +125,26 @@ export function AdminDashboard({
   );
 }
 
-export function DocumentTable({ documents }: { documents: LearnlyDocument[] }) {
+export function DocumentTable({
+  documents,
+  emptyState = {
+    title: "Nothing is waiting here.",
+    body: "Give your future self something useful to return to.",
+    href: "/admin/upload",
+    action: "Add your first PDF",
+  },
+}: {
+  documents: LearnlyDocument[];
+  emptyState?: { title: string; body: string; href: string; action: string };
+}) {
   if (documents.length === 0) {
-    return <p className={styles.empty}>No documents have been uploaded yet.</p>;
+    return (
+      <div className={styles.empty}>
+        <strong>{emptyState.title}</strong>
+        <p>{emptyState.body}</p>
+        <Link href={emptyState.href}>{emptyState.action}</Link>
+      </div>
+    );
   }
 
   return (
@@ -123,11 +153,11 @@ export function DocumentTable({ documents }: { documents: LearnlyDocument[] }) {
         <thead>
           <tr>
             <th>Document</th>
-            <th>Status</th>
-            <th>Pages</th>
-            <th>Updated</th>
+            <th>Where it is</th>
+            <th>Length</th>
+            <th>Last touched</th>
             <th>
-              <span className="sr-only">Action</span>
+              <span className="sr-only">Open record</span>
             </th>
           </tr>
         </thead>
@@ -135,29 +165,23 @@ export function DocumentTable({ documents }: { documents: LearnlyDocument[] }) {
           {documents.map((document) => (
             <tr key={document.id}>
               <td>
-                <span className={styles.fileIcon}>{document.topics[0]?.slice(0, 1) ?? "D"}</span>
+                <span className={styles.fileIcon}>{document.topics[0]?.slice(0, 1) || "P"}</span>
                 <div>
-                  <strong>{document.title ?? document.originalFilename}</strong>
+                  <strong>{documentTitle(document)}</strong>
                   <small>{document.originalFilename}</small>
                 </div>
               </td>
               <td>
-                <StatusBadge status={document.status} />
+                <StatusBadge document={document} />
               </td>
-              <td>{document.pageCount ?? "—"}</td>
-              <td>
-                {new Intl.DateTimeFormat("en-GB", {
-                  day: "numeric",
-                  month: "short",
-                  timeZone: "UTC",
-                }).format(new Date(document.updatedAt))}
-              </td>
+              <td>{document.pageCount ? `${document.pageCount} pages` : "Not read yet"}</td>
+              <td>{formatUpdatedAt(document.updatedAt)}</td>
               <td>
                 <Link
                   href={`/admin/documents/${document.id}`}
-                  aria-label={`Review ${document.title ?? document.originalFilename}`}
+                  aria-label={`Review ${documentTitle(document)}`}
                 >
-                  ↗
+                  Open ↗
                 </Link>
               </td>
             </tr>
@@ -168,55 +192,58 @@ export function DocumentTable({ documents }: { documents: LearnlyDocument[] }) {
   );
 }
 
-const pipelineStages = [
-  "PDF stored",
-  "Text extracted",
-  "Page records saved",
-  "Ready for review",
-  "Published to library",
-];
-
-function pipelineStates(document: LearnlyDocument): PipelineState[] {
-  if (document.status === "failed") {
-    return ["completed", "failed", "pending", "pending", "pending"];
+function sequenceState(currentKey: LifecycleKey, itemKey: LifecycleKey) {
+  if (currentKey === "attention") {
+    if (itemKey === "waiting") return "complete";
+    if (itemKey === "reading") return "issue";
+    return "next";
   }
 
-  if (document.status === "processing") {
-    return ["completed", "processing", "pending", "pending", "pending"];
-  }
-
-  if (document.status === "published") {
-    return ["completed", "completed", "completed", "completed", "completed"];
-  }
-
-  if (document.pageCount !== null) {
-    return ["completed", "completed", "completed", "completed", "pending"];
-  }
-
-  return ["completed", "pending", "pending", "pending", "pending"];
+  const currentIndex = lifecycleSequence.findIndex((item) => item.key === currentKey);
+  const itemIndex = lifecycleSequence.findIndex((item) => item.key === itemKey);
+  if (itemIndex < currentIndex) return "complete";
+  if (itemIndex === currentIndex) return "current";
+  return "next";
 }
 
-export function Pipeline({ document }: { document: LearnlyDocument }) {
-  const states = pipelineStates(document);
+export function LifecyclePath({ document }: { document: LearnlyDocument }) {
+  const lifecycle = documentLifecycle(document);
 
   return (
-    <ol className={styles.pipeline}>
-      {pipelineStages.map((stage, index) => {
-        const state = states[index];
+    <div className={styles.lifecycle}>
+      <div className={styles.currentState} data-state={lifecycle.key}>
+        <span>Current state</span>
+        <strong>{lifecycle.label}</strong>
+        <p>{lifecycle.description}</p>
+      </div>
+      <ol>
+        {lifecycleSequence.map((item) => {
+          const state = sequenceState(lifecycle.key, item.key);
 
-        return (
-          <li key={stage} className={styles[state]}>
-            <span aria-hidden>
-              {state === "completed" ? "✓" : state === "failed" ? "!" : index + 1}
-            </span>
-            <div>
-              <strong>{stage}</strong>
-              <small>{state}</small>
-            </div>
-          </li>
-        );
-      })}
-    </ol>
+          return (
+            <li
+              key={item.key}
+              data-state={state}
+              aria-current={state === "current" ? "step" : undefined}
+            >
+              <span aria-hidden>{state === "complete" ? "✓" : state === "issue" ? "!" : "·"}</span>
+              <div>
+                <strong>{item.label}</strong>
+                <small>
+                  {state === "complete"
+                    ? "Done"
+                    : state === "current"
+                      ? "Now"
+                      : state === "issue"
+                        ? "Needs attention"
+                        : "Next"}
+                </small>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }
 
@@ -253,8 +280,9 @@ export function AdminDocumentsView({ initialData }: { initialData: DocumentListR
 
   const activeDocument = useMemo(
     () =>
-      data.items.find((document) => document.status === "processing") ??
       data.items.find((document) => document.status === "failed") ??
+      data.items.find((document) => document.status === "processing") ??
+      data.items.find((document) => document.status === "uploaded") ??
       data.items[0],
     [data.items],
   );
@@ -267,62 +295,68 @@ export function AdminDocumentsView({ initialData }: { initialData: DocumentListR
   return (
     <>
       <AdminPageHeader
-        eyebrow="Document operations"
-        title="Processing center."
-        body="Track uploads, extraction, failures, and publication through the live API."
+        eyebrow="Processing"
+        title="Follow every PDF from desk to shelf."
+        body="Search your records, see what Learnly is reading, and open anything that needs your decision."
       />
+
       <form className={styles.toolbar} onSubmit={submitFilters}>
         <label>
-          <span className="sr-only">Search documents</span>
+          <span>Find a document</span>
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search filename or title…"
+            placeholder="Title or filename"
           />
         </label>
         <label>
-          <span className="sr-only">Filter by status</span>
+          <span>Show</span>
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value as "all" | DocumentStatus)}
           >
-            <option value="all">All statuses</option>
-            <option value="uploaded">Uploaded</option>
-            <option value="processing">Processing</option>
-            <option value="published">Published</option>
-            <option value="failed">Failed</option>
+            <option value="all">Every state</option>
+            <option value="uploaded">Waiting or ready</option>
+            <option value="processing">Being read</option>
+            <option value="published">In the library</option>
+            <option value="failed">Needs attention</option>
           </select>
         </label>
-        <button type="submit">Apply filters</button>
+        <button type="submit">Update view</button>
       </form>
-      {error && (
+
+      {error ? (
         <p className={styles.alert} role="alert">
           {error}
         </p>
-      )}
+      ) : null}
+
       <div className={styles.processingLayout}>
-        <section className={styles.panel}>
-          <div className={styles.panelHead}>
+        <section className={styles.documentSection}>
+          <div className={styles.sectionHeading}>
             <div>
-              <span>All documents</span>
+              <span>All matching material</span>
               <h2>{data.total} records</h2>
             </div>
           </div>
-          <DocumentTable documents={data.items} />
+          <DocumentTable
+            documents={data.items}
+            emptyState={{
+              title: "Nothing matches this view.",
+              body: "Try a broader title search or return to every state.",
+              href: "/admin/documents",
+              action: "Show every document",
+            }}
+          />
         </section>
-        <aside className={`${styles.panel} ${styles.pipelinePanel}`}>
-          <div className={styles.panelHead}>
-            <div>
-              <span>Pipeline snapshot</span>
-              <h2>
-                {activeDocument?.title ?? activeDocument?.originalFilename ?? "No active document"}
-              </h2>
-            </div>
-          </div>
+
+        <aside className={styles.lifecyclePanel}>
+          <span className={styles.panelLabel}>Status snapshot</span>
+          <h2>{activeDocument ? documentTitle(activeDocument) : "Your desk is clear"}</h2>
           {activeDocument ? (
-            <Pipeline document={activeDocument} />
+            <LifecyclePath document={activeDocument} />
           ) : (
-            <p className={styles.empty}>Upload a PDF to begin processing.</p>
+            <p className={styles.panelEmpty}>Add a PDF when you are ready to begin.</p>
           )}
         </aside>
       </div>
@@ -330,82 +364,36 @@ export function AdminDocumentsView({ initialData }: { initialData: DocumentListR
   );
 }
 
-export function UploadForm() {
-  const router = useRouter();
-  const [file, setFile] = useState<File | null>(null);
-  const [publishAfterProcessing, setPublishAfterProcessing] = useState(false);
-  const [message, setMessage] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
-
-  async function submitUpload(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!file || isUploading) return;
-
-    setIsUploading(true);
-    setMessage("Uploading your PDF…");
-
-    try {
-      const document = await uploadDocument(file, publishAfterProcessing);
-      setMessage("Upload complete. Opening the processing record…");
-      router.push(`/admin/documents/${document.id}`);
-    } catch (error) {
-      setMessage(errorMessage(error));
-      setIsUploading(false);
-    }
-  }
-
+export function AdminPublishedView({ initialData }: { initialData: DocumentListResponse }) {
   return (
-    <form className={styles.uploadForm} onSubmit={submitUpload}>
-      <div className={styles.drop}>
-        <div className={styles.uploadOrb}>
-          <span aria-hidden>↑</span>
+    <>
+      <AdminPageHeader
+        eyebrow="Published"
+        title="Already on the shelf."
+        body="These documents are visible in the public library and ready to open, preview, or download."
+      >
+        <Link className={styles.headerLink} href="/notes">
+          See public library <span aria-hidden>↗</span>
+        </Link>
+      </AdminPageHeader>
+      <section className={styles.documentSection}>
+        <div className={styles.sectionHeading}>
+          <div>
+            <span>Public material</span>
+            <h2>{initialData.total} published</h2>
+          </div>
         </div>
-        <small>PDF / up to 25 MB</small>
-        <h2>{file ? file.name : "Drop a PDF into the studio"}</h2>
-        <p>
-          {file
-            ? `${(file.size / 1_000_000).toFixed(1)} MB selected and ready`
-            : "or choose a document from your device"}
-        </p>
-        <label className={styles.choose}>
-          Choose PDF <span aria-hidden>+</span>
-          <input
-            type="file"
-            accept="application/pdf,.pdf"
-            onChange={(event) => {
-              setFile(event.target.files?.[0] ?? null);
-              setMessage("");
-            }}
-          />
-        </label>
-      </div>
-      <div className={styles.fields}>
-        <div className={styles.formIntro}>
-          <span>Processing options</span>
-          <h3>Prepare the document.</h3>
-          <p>
-            Learnly stores the PDF, extracts each page, and calculates the page count and reading
-            time before publication.
-          </p>
-        </div>
-        <label className={styles.check}>
-          <input
-            type="checkbox"
-            checked={publishAfterProcessing}
-            onChange={(event) => setPublishAfterProcessing(event.target.checked)}
-          />
-          <span>Publish after successful processing</span>
-        </label>
-        <button type="submit" disabled={!file || isUploading}>
-          {isUploading ? "Uploading…" : "Upload and process"} <span aria-hidden>↗</span>
-        </button>
-        {message && (
-          <p className={styles.message} role="status">
-            {message}
-          </p>
-        )}
-      </div>
-    </form>
+        <DocumentTable
+          documents={initialData.items}
+          emptyState={{
+            title: "Nothing is public yet.",
+            body: "Documents will appear here after you review and publish them.",
+            href: "/admin/documents",
+            action: "Review processing",
+          }}
+        />
+      </section>
+    </>
   );
 }
 
@@ -413,6 +401,7 @@ export function AdminDocumentReview({ initialDocument }: { initialDocument: Lear
   const router = useRouter();
   const [document, setDocument] = useState(initialDocument);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [busyAction, setBusyAction] = useState("");
   const shouldPoll =
     document.status === "processing" ||
@@ -435,14 +424,17 @@ export function AdminDocumentReview({ initialDocument }: { initialDocument: Lear
 
   async function runAction(
     label: string,
+    successMessage: string,
     action: (documentId: number) => Promise<LearnlyDocument>,
   ) {
     setBusyAction(label);
     setError("");
+    setNotice("");
 
     try {
       const nextDocument = await action(document.id);
       setDocument(nextDocument);
+      setNotice(successMessage);
       router.refresh();
     } catch (requestError) {
       setError(errorMessage(requestError));
@@ -458,88 +450,102 @@ export function AdminDocumentReview({ initialDocument }: { initialDocument: Lear
   return (
     <>
       <AdminPageHeader
-        eyebrow="Metadata review"
-        title={document.title ?? document.originalFilename}
-        body={document.description ?? "Review the extracted document and control its publication."}
+        eyebrow="Document review"
+        title={documentTitle(document)}
+        body={
+          document.description?.trim() ||
+          "No description has been added. Review the stored file and its reading state here."
+        }
       >
         <div className={styles.headerActions}>
-          <StatusBadge status={document.status} />
+          <StatusBadge document={document} />
           <div className={styles.actionButtons}>
-            {previewUrl && (
+            {previewUrl ? (
               <a href={previewUrl} target="_blank" rel="noreferrer">
-                Preview PDF
+                Preview
               </a>
-            )}
-            {downloadUrl && <a href={downloadUrl}>Download</a>}
-            {document.status === "failed" && (
+            ) : null}
+            {downloadUrl ? <a href={downloadUrl}>Download</a> : null}
+            {document.status === "failed" ? (
               <button
                 type="button"
                 disabled={Boolean(busyAction)}
-                onClick={() => void runAction("retry", retryDocument)}
+                onClick={() => void runAction("retry", "Retry started", retryDocument)}
               >
-                {busyAction === "retry" ? "Retrying…" : "Retry processing"}
+                {busyAction === "retry" ? "Starting retry…" : "Retry"}
               </button>
-            )}
-            {isReadyToPublish && (
+            ) : null}
+            {isReadyToPublish ? (
               <button
                 type="button"
                 disabled={Boolean(busyAction)}
-                onClick={() => void runAction("publish", publishDocument)}
+                onClick={() => void runAction("publish", "Published", publishDocument)}
               >
                 {busyAction === "publish" ? "Publishing…" : "Publish"}
               </button>
-            )}
-            {document.status === "published" && (
+            ) : null}
+            {document.status === "published" ? (
               <button
                 type="button"
                 disabled={Boolean(busyAction)}
-                onClick={() => void runAction("unpublish", unpublishDocument)}
+                onClick={() => {
+                  const confirmed = window.confirm(
+                    "Remove this document from the public library? The stored PDF and extracted pages will remain in Learnly.",
+                  );
+                  if (confirmed) void runAction("unpublish", "Unpublished", unpublishDocument);
+                }}
               >
                 {busyAction === "unpublish" ? "Unpublishing…" : "Unpublish"}
               </button>
-            )}
+            ) : null}
           </div>
         </div>
       </AdminPageHeader>
-      {error && (
-        <p className={styles.alert} role="alert">
-          {error}
-        </p>
-      )}
+
+      <div className={styles.liveMessages} aria-live="polite">
+        {notice ? <p className={styles.notice}>{notice}</p> : null}
+        {error ? (
+          <p className={styles.alert} role="alert">
+            {error}
+          </p>
+        ) : null}
+      </div>
+
       <div className={styles.reviewLayout}>
-        <section className={styles.reviewPanel}>
-          <h2>Document record</h2>
-          <dl className={styles.documentFacts}>
+        <section className={styles.record}>
+          <span className={styles.panelLabel}>Stored details</span>
+          <h2>The file behind this record.</h2>
+          <dl>
             <div>
-              <dt>Original file</dt>
+              <dt>Original filename</dt>
               <dd>{document.originalFilename}</dd>
             </div>
             <div>
               <dt>Pages</dt>
-              <dd>{document.pageCount ?? "Pending"}</dd>
+              <dd>{document.pageCount ?? "Not read yet"}</dd>
             </div>
             <div>
               <dt>Reading time</dt>
               <dd>
                 {document.estimatedReadingMinutes
                   ? `${document.estimatedReadingMinutes} minutes`
-                  : "Pending"}
+                  : "Not estimated"}
               </dd>
             </div>
             <div>
-              <dt>Public slug</dt>
+              <dt>Public address</dt>
               <dd>{document.slug ?? "Not published"}</dd>
             </div>
           </dl>
         </section>
-        <aside className={styles.reviewPanel}>
-          <h2>Pipeline</h2>
-          <Pipeline document={document} />
-          {document.processingError && (
+
+        <aside className={styles.lifecyclePanel}>
+          <LifecyclePath document={document} />
+          {document.processingError ? (
             <p className={styles.alert} role="alert">
               {document.processingError}
             </p>
-          )}
+          ) : null}
         </aside>
       </div>
     </>

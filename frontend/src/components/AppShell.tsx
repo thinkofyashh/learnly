@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PaperBloom } from "./PaperBloom";
 import { SearchOverlay } from "./SearchOverlay";
 import { ThemeToggle } from "./ThemeToggle";
+import { UploadSheet } from "./UploadSheet";
 import styles from "./AppShell.module.css";
 
 const publicNavigation = [
@@ -19,6 +20,7 @@ const adminNavigation = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/upload", label: "Add PDF" },
   { href: "/admin/documents", label: "Processing" },
+  { href: "/admin/published", label: "Published" },
   { href: "/notes", label: "Public library" },
 ];
 
@@ -39,7 +41,11 @@ function Brand({ compact = false }: { compact?: boolean }) {
 
 function PublicShell({ children, path }: { children: React.ReactNode; path: string }) {
   const [searchOpen, setSearchOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [uploadSource, setUploadSource] = useState<"desktop" | "mobile">("desktop");
   const searchButtonRef = useRef<HTMLButtonElement>(null);
+  const uploadButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileUploadButtonRef = useRef<HTMLButtonElement>(null);
   const closeSearch = useCallback(() => setSearchOpen(false), []);
 
   useEffect(() => {
@@ -79,13 +85,27 @@ function PublicShell({ children, path }: { children: React.ReactNode; path: stri
             Search <kbd>⌘ K</kbd>
           </button>
           <ThemeToggle />
-          <Link className={styles.addAction} href="/admin/upload">
+          <button
+            ref={uploadButtonRef}
+            type="button"
+            className={styles.addAction}
+            onClick={() => {
+              setUploadSource("desktop");
+              setUploadOpen(true);
+            }}
+          >
             <span aria-hidden>+</span> Add something
-          </Link>
+          </button>
         </div>
       </header>
 
       {searchOpen ? <SearchOverlay onClose={closeSearch} returnFocusRef={searchButtonRef} /> : null}
+      {uploadOpen ? (
+        <UploadSheet
+          onClose={() => setUploadOpen(false)}
+          returnFocusRef={uploadSource === "mobile" ? mobileUploadButtonRef : uploadButtonRef}
+        />
+      ) : null}
 
       <main className={styles.publicMain}>{children}</main>
 
@@ -110,10 +130,18 @@ function PublicShell({ children, path }: { children: React.ReactNode; path: stri
         <Link href="/topics" className={path.startsWith("/topics") ? styles.mobileActive : ""}>
           Topics
         </Link>
-        <Link href="/admin/upload" className={styles.mobileAdd}>
+        <button
+          ref={mobileUploadButtonRef}
+          type="button"
+          className={styles.mobileAdd}
+          onClick={() => {
+            setUploadSource("mobile");
+            setUploadOpen(true);
+          }}
+        >
           <span aria-hidden>+</span>
           Add
-        </Link>
+        </button>
         <Link href="/admin" className={path.startsWith("/admin") ? styles.mobileActive : ""}>
           Studio
         </Link>
@@ -144,6 +172,7 @@ function AdminShell({ children, path }: { children: React.ReactNode; path: strin
             <span aria-hidden>+</span> Add PDF
           </Link>
         </div>
+        <p className={styles.railNote}>A private desk for preparing your public library.</p>
       </header>
 
       <div className={styles.workspaceIntro}>
@@ -154,7 +183,7 @@ function AdminShell({ children, path }: { children: React.ReactNode; path: strin
       <main className={styles.adminMain}>{children}</main>
 
       <nav className={styles.mobileNav} aria-label="Mobile studio navigation">
-        {adminNavigation.slice(0, 3).map((item) => (
+        {adminNavigation.slice(0, 4).map((item) => (
           <Link
             key={item.href}
             href={item.href}
