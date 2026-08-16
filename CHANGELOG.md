@@ -28,6 +28,7 @@
 
 ### Changed
 
+- Established the warm paper design system, typography, light-default theme, and compact workspace navigation
 - Clarified roadmap language for future automated metadata capabilities
 - Standardized frontend formatting and added focused debugging comments
 - Refined dark-mode contrast with a premium charcoal-and-jade palette

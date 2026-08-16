@@ -5,53 +5,42 @@
   padding: 0;
   display: grid;
   place-items: center;
-  flex: 0 0 auto;
   overflow: hidden;
-  border: 1px solid var(--border-strong);
-  border-radius: 13px;
-  color: var(--text-primary);
-  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--paper);
   cursor: pointer;
+  transition:
+    background var(--motion-quick),
+    transform var(--motion-quick);
+}
+
+.toggle:hover {
+  background: var(--desk-deep);
+  transform: rotate(-3deg);
 }
 
 .toggle svg {
-  z-index: 2;
-  grid-area: 1 / 1;
+  position: absolute;
   width: 18px;
   height: 18px;
   transition:
-    opacity var(--transition-normal),
-    transform var(--transition-normal);
-}
-
-.orbit {
-  position: absolute;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--primary) 14%, transparent);
-  transition: transform var(--transition-normal);
-}
-
-.sun {
-  opacity: 0;
-  transform: rotate(30deg) scale(0.7);
+    opacity var(--motion-standard),
+    transform var(--motion-standard);
 }
 
 .moon {
-  opacity: 1;
-}
-
-:global([data-theme="light"]) .sun {
-  opacity: 1;
-  transform: none;
-}
-
-:global([data-theme="light"]) .moon {
   opacity: 0;
-  transform: rotate(-30deg) scale(0.7);
+  transform: translateY(14px) rotate(18deg);
 }
 
-.toggle:hover .orbit {
-  transform: scale(1.25);
+:global(:root[data-theme="dark"]) .sun {
+  opacity: 0;
+  transform: translateY(-14px) rotate(-18deg);
+}
+
+:global(:root[data-theme="dark"]) .moon {
+  opacity: 1;
+  transform: translateY(0) rotate(0);
 }

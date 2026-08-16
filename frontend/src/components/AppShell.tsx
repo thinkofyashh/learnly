@@ -3,91 +3,35 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { PaperBloom } from "./PaperBloom";
 import { ThemeToggle } from "./ThemeToggle";
 import styles from "./AppShell.module.css";
 
-type IconName = "home" | "library" | "admin" | "upload" | "process";
-
-const publicNavigation: Array<{ href: string; label: string; icon: IconName }> = [
-  { href: "/", label: "Home", icon: "home" },
-  { href: "/notes", label: "Library", icon: "library" },
-  { href: "/admin", label: "Studio", icon: "admin" },
+const publicNavigation = [
+  { href: "/", label: "Explore" },
+  { href: "/notes", label: "Library" },
 ];
 
-const adminNavigation: Array<{ href: string; label: string; icon: IconName }> = [
-  { href: "/admin", label: "Overview", icon: "home" },
-  { href: "/admin/upload", label: "Upload", icon: "upload" },
-  { href: "/admin/documents", label: "Processing", icon: "process" },
-  { href: "/notes", label: "Public library", icon: "library" },
+const adminNavigation = [
+  { href: "/admin", label: "Overview" },
+  { href: "/admin/upload", label: "Add PDF" },
+  { href: "/admin/documents", label: "Processing" },
+  { href: "/notes", label: "Public library" },
 ];
+
+function isActivePath(path: string, href: string): boolean {
+  if (href === "/") return path === "/";
+  if (href === "/admin") return path === "/admin";
+  return path.startsWith(href);
+}
 
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
     <Link href="/" className={`${styles.brand} ${compact ? styles.compactBrand : ""}`}>
-      <span className={styles.mark} aria-hidden>
-        L
-      </span>
-      <span>
-        Learnly<em>.</em>
-      </span>
+      <PaperBloom compact />
+      <span>Learnly</span>
     </Link>
   );
-}
-
-function NavIcon({ name }: { name: IconName }) {
-  const paths: Record<IconName, React.ReactNode> = {
-    home: (
-      <>
-        <path d="m3 11 9-8 9 8" />
-        <path d="M5 10v10h14V10" />
-        <path d="M9 20v-6h6v6" />
-      </>
-    ),
-    library: (
-      <>
-        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5Z" />
-        <path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5Z" />
-      </>
-    ),
-    admin: (
-      <>
-        <rect x="3" y="3" width="7" height="7" rx="2" />
-        <rect x="14" y="3" width="7" height="7" rx="2" />
-        <rect x="3" y="14" width="7" height="7" rx="2" />
-        <rect x="14" y="14" width="7" height="7" rx="2" />
-      </>
-    ),
-    upload: (
-      <>
-        <path d="M12 16V4" />
-        <path d="m7 9 5-5 5 5" />
-        <path d="M4 15v5h16v-5" />
-      </>
-    ),
-    process: (
-      <>
-        <path d="M20 12a8 8 0 1 1-2.34-5.66" />
-        <path d="M20 4v6h-6" />
-      </>
-    ),
-  };
-
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
-      {paths[name]}
-    </svg>
-  );
-}
-
-function RouteContent({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  path: string;
-  className: string;
-}) {
-  return <main className={className}>{children}</main>;
 }
 
 function PublicShell({ children, path }: { children: React.ReactNode; path: string }) {
@@ -96,42 +40,53 @@ function PublicShell({ children, path }: { children: React.ReactNode; path: stri
       <header className={styles.publicHeader}>
         <Brand />
         <nav className={styles.publicNav} aria-label="Primary navigation">
-          {publicNavigation.map((item) => {
-            const active = item.href === "/" ? path === "/" : path.startsWith(item.href);
-            return (
-              <Link key={item.href} href={item.href} className={active ? styles.publicActive : ""}>
-                {item.label}
-                {active && <span className={styles.navIndicator} />}
-              </Link>
-            );
-          })}
+          {publicNavigation.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={isActivePath(path, item.href) ? styles.active : ""}
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
         <div className={styles.headerActions}>
+          <Link href="/notes" className={styles.searchAction}>
+            Search <kbd>⌘ K</kbd>
+          </Link>
           <ThemeToggle />
-          <Link className={styles.upload} href="/admin/upload">
-            Upload note <span aria-hidden>↗</span>
+          <Link className={styles.addAction} href="/admin/upload">
+            <span aria-hidden>+</span> Add something
           </Link>
         </div>
       </header>
-      <RouteContent path={path} className={styles.publicMain}>
-        {children}
-      </RouteContent>
+
+      <main className={styles.publicMain}>{children}</main>
+
       <footer className={styles.footer}>
         <Brand compact />
-        <p>A living library for curious minds.</p>
-        <span>© 2026 Learnly</span>
+        <p>PDFs worth returning to, kept in one thoughtful place.</p>
+        <div>
+          <Link href="/notes">Library</Link>
+          <Link href="/admin">Studio</Link>
+          <span>© 2026 Learnly</span>
+        </div>
       </footer>
-      <nav className={styles.publicMobileNav} aria-label="Mobile navigation">
-        {publicNavigation.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={path === item.href ? styles.mobileActive : ""}
-          >
-            <NavIcon name={item.icon} />
-            <span>{item.label}</span>
-          </Link>
-        ))}
+
+      <nav className={styles.mobileNav} aria-label="Mobile navigation">
+        <Link href="/" className={path === "/" ? styles.mobileActive : ""}>
+          Explore
+        </Link>
+        <Link href="/notes" className={path.startsWith("/notes") ? styles.mobileActive : ""}>
+          Library
+        </Link>
+        <Link href="/admin/upload" className={styles.mobileAdd}>
+          <span aria-hidden>+</span>
+          Add
+        </Link>
+        <Link href="/admin" className={path.startsWith("/admin") ? styles.mobileActive : ""}>
+          Studio
+        </Link>
       </nav>
     </div>
   );
@@ -140,69 +95,52 @@ function PublicShell({ children, path }: { children: React.ReactNode; path: stri
 function AdminShell({ children, path }: { children: React.ReactNode; path: string }) {
   return (
     <div className={styles.adminShell}>
-      <aside className={styles.sidebar}>
+      <header className={styles.adminHeader}>
         <Brand />
-        <p className={styles.eyebrow}>Learning studio</p>
-        <nav aria-label="Admin navigation">
-          {adminNavigation.map((item) => {
-            const active = item.href === "/admin" ? path === "/admin" : path.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`${styles.link} ${active ? styles.active : ""}`}
-              >
-                <NavIcon name={item.icon} />
-                {item.label}
-                {active && <span className={styles.adminIndicator} />}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className={styles.sidebarFoot}>
-          <span className={styles.statusDot} />
-          <div>
-            <strong>Learnly workspace</strong>
-            <small>Live library data</small>
-          </div>
-        </div>
-      </aside>
-      <div className={styles.workspace}>
-        <header className={styles.adminHeader}>
-          <Brand compact />
-          <div>
-            <span className={styles.kicker}>Midnight Studio</span>
-            <strong>Your knowledge workspace</strong>
-          </div>
-          <div className={styles.headerActions}>
-            <ThemeToggle />
-            <Link className={styles.upload} href="/admin/upload">
-              New document <span aria-hidden>+</span>
-            </Link>
-          </div>
-        </header>
-        <RouteContent path={path} className={styles.adminMain}>
-          {children}
-        </RouteContent>
-        <nav className={styles.adminMobileNav} aria-label="Mobile admin navigation">
-          {adminNavigation.slice(0, 3).map((item) => (
+        <nav className={styles.adminNav} aria-label="Studio navigation">
+          {adminNavigation.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={path === item.href ? styles.mobileActive : ""}
+              className={isActivePath(path, item.href) ? styles.active : ""}
             >
-              <NavIcon name={item.icon} />
-              <span>{item.label}</span>
+              {item.label}
             </Link>
           ))}
         </nav>
+        <div className={styles.headerActions}>
+          <ThemeToggle />
+          <Link className={styles.addAction} href="/admin/upload">
+            <span aria-hidden>+</span> Add PDF
+          </Link>
+        </div>
+      </header>
+
+      <div className={styles.workspaceIntro}>
+        <span>Learnly studio</span>
+        <p>Your private desk for preparing the public library.</p>
       </div>
+
+      <main className={styles.adminMain}>{children}</main>
+
+      <nav className={styles.mobileNav} aria-label="Mobile studio navigation">
+        {adminNavigation.slice(0, 3).map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={isActivePath(path, item.href) ? styles.mobileActive : ""}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
     </div>
   );
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
+
   return path.startsWith("/admin") ? (
     <AdminShell path={path}>{children}</AdminShell>
   ) : (

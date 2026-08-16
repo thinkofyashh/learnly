@@ -12,10 +12,10 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
-    const current = document.documentElement.dataset.theme === "light" ? "light" : "dark";
+    const current = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
     const syncTheme = window.setTimeout(() => setTheme(current), 0);
     return () => window.clearTimeout(syncTheme);
   }, []);
@@ -37,7 +37,6 @@ export function ThemeToggle() {
       aria-label={`Switch to ${nextThemeLabel} mode`}
       title={`Switch to ${nextThemeLabel} mode`}
     >
-      <span className={styles.orbit} />
       <svg
         className={styles.sun}
         viewBox="0 0 24 24"

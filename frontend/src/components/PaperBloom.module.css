@@ -1,0 +1,102 @@
+.bloom {
+  --bloom-size: 220px;
+  position: relative;
+  width: var(--bloom-size);
+  aspect-ratio: 1;
+  isolation: isolate;
+}
+
+.sheet,
+.core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  box-shadow: var(--shadow-paper);
+  transform-origin: 50% 100%;
+}
+
+.sheet {
+  width: 42%;
+  height: 57%;
+  border-radius: 28% 22% 38% 18%;
+  background: var(--sheet);
+}
+
+.sheetOne {
+  background: var(--sun-wash);
+  transform: translate(-50%, -92%) rotate(-44deg);
+}
+
+.sheetTwo {
+  background: var(--leaf-wash);
+  transform: translate(-10%, -82%) rotate(38deg);
+}
+
+.sheetThree {
+  background: var(--sky-wash);
+  transform: translate(-88%, -38%) rotate(-104deg);
+}
+
+.sheetFour {
+  background: var(--peach-wash);
+  transform: translate(-4%, -35%) rotate(104deg);
+}
+
+.core {
+  width: 34%;
+  aspect-ratio: 1;
+  padding: 18%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9%;
+  place-content: center;
+  border-radius: 44% 56% 51% 49%;
+  background: var(--ink);
+  box-shadow: 0 18px 44px color-mix(in srgb, var(--ink) 22%, transparent);
+  transform: translate(-50%, -50%);
+}
+
+.core i {
+  width: 100%;
+  aspect-ratio: 0.28;
+  border-radius: 999px;
+  background: var(--paper);
+}
+
+.core i:nth-child(2) {
+  background: var(--sun);
+}
+
+.compact {
+  --bloom-size: 34px;
+}
+
+.compact .sheet,
+.compact .core {
+  border-width: 0.5px;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bloom:not(.compact) .sheet {
+    transition: transform var(--motion-gentle);
+  }
+
+  .bloom:not(.compact):hover .sheetOne {
+    transform: translate(-50%, -96%) rotate(-49deg);
+  }
+
+  .bloom:not(.compact):hover .sheetTwo {
+    transform: translate(-5%, -86%) rotate(43deg);
+  }
+
+  .bloom:not(.compact):hover .sheetThree {
+    transform: translate(-92%, -34%) rotate(-109deg);
+  }
+
+  .bloom:not(.compact):hover .sheetFour {
+    transform: translate(0, -31%) rotate(109deg);
+  }
+}
