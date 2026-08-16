@@ -1,10 +1,16 @@
-import { notFound } from "next/navigation";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 import { DocumentActions } from "@/components/DocumentActions";
-import { Reveal } from "@/components/MotionPrimitives";
-import { Badge, NoteCard } from "@/components/ui";
-import { getPublishedDocument, getPublishedDocuments, resolveApiUrl } from "@/services/api-client";
+import { DocumentFolio } from "@/components/DocumentFolio";
+import { RecentDocumentTracker } from "@/components/RecentDocumentTracker";
+import { toTopicSlug } from "@/lib/topics";
+import {
+  getAllPublishedDocuments,
+  getPublishedDocument,
+  resolveApiUrl,
+} from "@/services/api-client";
+import type { LearnlyDocument } from "@/types/document";
 
 import styles from "./detail.module.css";
 
@@ -13,150 +19,199 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1_000_000).toFixed(1)} MB`;
 }
 
+function documentTitle(document: LearnlyDocument): string {
+  return document.title?.trim() || document.originalFilename;
+}
+
+function relatedDocuments(document: LearnlyDocument, library: LearnlyDocument[]) {
+  const topics = new Set(document.topics.map((topic) => topic.toLowerCase()));
+
+  return library
+    .filter((item) => item.id !== document.id)
+    .sort((left, right) => {
+      const leftMatches = left.topics.filter((topic) => topics.has(topic.toLowerCase())).length;
+      const rightMatches = right.topics.filter((topic) => topics.has(topic.toLowerCase())).length;
+      return rightMatches - leftMatches;
+    })
+    .slice(0, 3);
+}
+
 export default async function Detail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const [document, library] = await Promise.all([
     getPublishedDocument(slug),
-    getPublishedDocuments(1, 3),
+    getAllPublishedDocuments(),
   ]);
 
   if (!document) notFound();
 
+  const title = documentTitle(document);
   const previewUrl = resolveApiUrl(document.previewUrl);
   const downloadUrl = resolveApiUrl(document.downloadUrl);
+  const related = relatedDocuments(document, library);
   const metadata = [
-    ["Pages", document.pageCount ?? "—"],
+    ["Length", document.pageCount ? `${document.pageCount} pages` : "Page count pending"],
     [
       "Reading time",
-      document.estimatedReadingMinutes ? `${document.estimatedReadingMinutes} min` : "—",
+      document.estimatedReadingMinutes
+        ? `${document.estimatedReadingMinutes} minutes`
+        : "Not estimated",
     ],
-    ["File size", formatBytes(document.sizeBytes)],
-    ["Views", document.viewCount],
+    ["File", formatBytes(document.sizeBytes)],
+    ["Opened", `${document.viewCount} ${document.viewCount === 1 ? "time" : "times"}`],
   ];
 
   return (
-    <div className={styles.page}>
-      <Link href="/notes" className={styles.back}>
-        <span aria-hidden>←</span> Back to library
-      </Link>
-      <header className={styles.header}>
-        <Reveal className={styles.headerCopy}>
-          <div className={styles.badges}>
-            {document.difficulty && <Badge tone={document.difficulty}>{document.difficulty}</Badge>}
-            {document.topics.map((topic) => (
-              <Badge key={topic}>{topic}</Badge>
-            ))}
+    <main className={styles.page}>
+      <RecentDocumentTracker documentId={document.id} />
+
+      <nav className={styles.breadcrumb} aria-label="Breadcrumb">
+        <Link href="/notes">Library</Link>
+        <span aria-hidden>/</span>
+        <span aria-current="page">{title}</span>
+      </nav>
+
+      <header className={styles.bookHeader}>
+        <div className={styles.cover} aria-hidden>
+          <span className={styles.fileType}>PDF · Learnly</span>
+          <strong>{document.topics[0]?.slice(0, 2).toUpperCase() || "PDF"}</strong>
+          <div className={styles.coverLines}>
+            <i />
+            <i />
+            <i />
           </div>
-          <h1>{document.title ?? document.originalFilename}</h1>
-          <p>{document.description ?? "A processed PDF from the Learnly library."}</p>
+          <small>{document.pageCount ? `${document.pageCount} pages` : "Pages pending"}</small>
+        </div>
+
+        <div className={styles.introduction}>
+          <p className={styles.eyebrow}>Open from your library</p>
+          <h1>{title}</h1>
+          <p className={styles.description}>
+            {document.description?.trim() ||
+              "This document has no description yet. Open the original pages to start reading."}
+          </p>
+
+          {document.topics.length > 0 ? (
+            <div className={styles.topics} aria-label="Document topics">
+              {document.topics.map((topic) => (
+                <Link key={topic} href={`/topics/${toTopicSlug(topic)}`}>
+                  {topic}
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className={styles.unassigned}>No topics assigned</p>
+          )}
+
           <div className={styles.actions}>
             <DocumentActions downloadUrl={downloadUrl} />
           </div>
-        </Reveal>
-        <Reveal className={styles.metaPanel} delay={0.08}>
-          <span className={styles.metaLabel}>Document signal</span>
-          <dl>
-            {metadata.map(([label, value]) => (
-              <div key={label}>
-                <dt>{label}</dt>
-                <dd>{value}</dd>
-              </div>
-            ))}
-          </dl>
-        </Reveal>
+        </div>
       </header>
 
-      <div className={styles.layout}>
-        <section>
-          <Reveal className={styles.preview}>
-            <div className={styles.previewGlow} />
-            {previewUrl ? (
-              <iframe
-                src={previewUrl}
-                title={`Preview of ${document.title ?? document.originalFilename}`}
-              />
-            ) : (
-              <div className={styles.previewPage}>
-                <span>Learnly document</span>
-                <strong>{document.title ?? document.originalFilename}</strong>
-                <div className={styles.previewLines} />
-                <small>Preview unavailable.</small>
-              </div>
-            )}
-            <span className={styles.previewBadge}>{document.pageCount ?? "—"} pages</span>
-          </Reveal>
-          <Reveal className={styles.overview}>
-            <span>Document overview</span>
-            <h2>A focused path through the material.</h2>
-            <p>{document.description ?? "Open the PDF preview to explore this document."}</p>
-          </Reveal>
-          {document.keyTakeaways.length > 0 && (
-            <Reveal>
-              <div className={styles.sectionTitle}>
-                <span>Key takeaways</span>
-                <h2>What stays with you.</h2>
-              </div>
-              <ul className={styles.takeaways}>
-                {document.keyTakeaways.map((takeaway, index) => (
-                  <li key={takeaway}>
-                    <span>{(index + 1).toString().padStart(2, "0")}</span>
-                    <p>{takeaway}</p>
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-          )}
-        </section>
-        <aside className={styles.aside}>
-          <div className={styles.sideCard}>
-            <span className={styles.sideLabel}>Document</span>
-            <h3>File details</h3>
-            <div className={styles.detailRow}>
-              <span>Original file</span>
-              <strong>{document.originalFilename}</strong>
-            </div>
-            <div className={styles.detailRow}>
-              <span>Published</span>
-              <strong>
-                {document.publishedAt
-                  ? new Date(document.publishedAt).toLocaleDateString("en-GB")
-                  : "—"}
-              </strong>
-            </div>
-            <div className={styles.detailRow}>
-              <span>Topics</span>
-              <strong>{document.topics.join(", ") || "Not assigned"}</strong>
-            </div>
+      <dl className={styles.metadata}>
+        {metadata.map(([label, value]) => (
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd>{value}</dd>
           </div>
-          {document.prerequisites.length > 0 && (
-            <div className={`${styles.sideCard} ${styles.prerequisites}`}>
-              <span className={styles.sideLabel}>Prepare</span>
-              <h3>Before you begin</h3>
-              {document.prerequisites.map((prerequisite) => (
-                <p key={prerequisite}>
-                  <span>✓</span>
-                  {prerequisite}
-                </p>
-              ))}
+        ))}
+      </dl>
+
+      <section className={styles.reader} aria-labelledby="reader-title">
+        <div className={styles.readerHeading}>
+          <div>
+            <p className={styles.eyebrow}>Original pages</p>
+            <h2 id="reader-title">Read it as it was made.</h2>
+          </div>
+          <p>
+            The preview stays connected to the stored PDF. Download the original whenever you want
+            to keep a local copy.
+          </p>
+        </div>
+
+        <div className={styles.previewDesk}>
+          {previewUrl ? (
+            <iframe src={previewUrl} title={`Preview of ${title}`} />
+          ) : (
+            <div className={styles.previewUnavailable}>
+              <span>Preview unavailable</span>
+              <strong>The original pages could not be opened here.</strong>
+              <p>Use the download action above if the stored file is available.</p>
             </div>
           )}
-        </aside>
-      </div>
-
-      <section className={styles.related}>
-        <div className={styles.sectionTitle}>
-          <span>Keep exploring</span>
-          <h2>Related notes.</h2>
-        </div>
-        <div>
-          {library.items
-            .filter((item) => item.id !== document.id)
-            .slice(0, 2)
-            .map((item, index) => (
-              <NoteCard key={item.id} document={item} index={index} />
-            ))}
         </div>
       </section>
-    </div>
+
+      {(document.keyTakeaways.length > 0 || document.prerequisites.length > 0) && (
+        <section className={styles.notes} aria-label="Study notes">
+          {document.keyTakeaways.length > 0 && (
+            <div className={styles.takeaways}>
+              <p className={styles.eyebrow}>Key takeaways</p>
+              <h2>What stays with you.</h2>
+              <ol>
+                {document.keyTakeaways.map((takeaway) => (
+                  <li key={takeaway}>{takeaway}</li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          {document.prerequisites.length > 0 && (
+            <aside className={styles.prerequisites}>
+              <p className={styles.eyebrow}>Before you begin</p>
+              <ul>
+                {document.prerequisites.map((prerequisite) => (
+                  <li key={prerequisite}>{prerequisite}</li>
+                ))}
+              </ul>
+            </aside>
+          )}
+        </section>
+      )}
+
+      <section className={styles.fileDetails} aria-labelledby="file-details-title">
+        <div>
+          <p className={styles.eyebrow}>On the shelf</p>
+          <h2 id="file-details-title">The file behind this folio.</h2>
+        </div>
+        <dl>
+          <div>
+            <dt>Original filename</dt>
+            <dd>{document.originalFilename}</dd>
+          </div>
+          <div>
+            <dt>Difficulty</dt>
+            <dd>{document.difficulty || "Not assigned"}</dd>
+          </div>
+          <div>
+            <dt>Published</dt>
+            <dd>
+              {document.publishedAt
+                ? new Date(document.publishedAt).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })
+                : "Publication date unavailable"}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      {related.length > 0 && (
+        <section className={styles.related} aria-labelledby="related-title">
+          <div className={styles.relatedHeading}>
+            <p className={styles.eyebrow}>Nearby on the desk</p>
+            <h2 id="related-title">Keep following the thread.</h2>
+          </div>
+          <div className={styles.relatedGrid}>
+            {related.map((item, index) => (
+              <DocumentFolio key={item.id} document={item} index={index} />
+            ))}
+          </div>
+        </section>
+      )}
+    </main>
   );
 }

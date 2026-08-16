@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { KeyboardEvent, RefObject } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { readRecentDocumentIds, rememberDocument } from "@/lib/recent-documents";
 import { collectTopics } from "@/lib/topics";
 import { getAllPublishedDocuments } from "@/services/api-client";
 import type { LearnlyDocument } from "@/types/document";
@@ -11,7 +12,6 @@ import type { LearnlyDocument } from "@/types/document";
 import styles from "./SearchOverlay.module.css";
 
 const RECENT_SEARCHES_KEY = "learnly-searches-v1";
-const RECENT_DOCUMENTS_KEY = "learnly-recent-documents-v1";
 
 function readStoredArray<T>(key: string): T[] {
   if (typeof window === "undefined") return [];
@@ -34,11 +34,6 @@ function saveRecentSearch(query: string) {
   localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify([normalized, ...recent].slice(0, 5)));
 }
 
-export function rememberDocument(documentId: number) {
-  const recent = readStoredArray<number>(RECENT_DOCUMENTS_KEY).filter((id) => id !== documentId);
-  localStorage.setItem(RECENT_DOCUMENTS_KEY, JSON.stringify([documentId, ...recent].slice(0, 5)));
-}
-
 export function SearchOverlay({
   onClose,
   returnFocusRef,
@@ -49,7 +44,7 @@ export function SearchOverlay({
   const [query, setQuery] = useState("");
   const [documents, setDocuments] = useState<LearnlyDocument[]>([]);
   const [recentSearches] = useState(() => readStoredArray<string>(RECENT_SEARCHES_KEY));
-  const [recentDocumentIds] = useState(() => readStoredArray<number>(RECENT_DOCUMENTS_KEY));
+  const [recentDocumentIds] = useState(readRecentDocumentIds);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState("");
   const dialogRef = useRef<HTMLDivElement>(null);

@@ -5,6 +5,7 @@
 ### Added
 
 - Full-library search, topic collection routes, and frontend pagination across published documents
+- Editorial document reading pages with live PDF previews, honest metadata, and related material
 - Initial Learnly monorepo structure
 - Next.js and TypeScript frontend
 - Core application shell
