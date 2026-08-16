@@ -112,7 +112,7 @@ Corrupt, unreadable, empty, or password-protected PDFs are rejected before stora
 - Background tasks are in-process and non-durable. Stopping FastAPI during extraction can leave a record in `processing`.
 - Administrative writes are local-only because authentication is not implemented.
 - Storage is local rather than cloud-backed.
-- OCR, thumbnails, AI-generated metadata, embeddings, RAG, and agents are not included.
+- OCR, thumbnails, automated metadata, embeddings, RAG, and agents are not included.
 - Topics, tags, takeaways, prerequisites, descriptions, and difficulty remain empty unless supplied by a future metadata workflow.
 
 The page-level extraction model intentionally provides a clean future boundary for chunking, embeddings, retrieval, and page-cited RAG without coupling those features to upload or storage code.

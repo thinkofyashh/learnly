@@ -28,6 +28,7 @@
 
 ### Changed
 
+- Clarified roadmap language for future automated metadata capabilities
 - Standardized frontend formatting and added focused debugging comments
 - Refined dark-mode contrast with a premium charcoal-and-jade palette
 - Replaced frontend document fixtures and planned pipeline labels with PostgreSQL-backed API data and actual processing stages
