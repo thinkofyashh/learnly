@@ -1,16 +1,32 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 
 import styles from "@/app/notes/notes.module.css";
-import type { LearnlyDocument } from "@/types/document";
+import type { Difficulty, LearnlyDocument } from "@/types/document";
 
-import { EmptyState, NoteCard } from "./ui";
+import { DocumentFolio } from "./DocumentFolio";
 
-export function NotesLibrary({ documents }: { documents: LearnlyDocument[] }) {
+type DifficultyFilter = "all" | Difficulty;
+
+export function NotesLibrary({
+  documents,
+  initialTopic = "all",
+}: {
+  documents: LearnlyDocument[];
+  initialTopic?: string;
+}) {
   const [query, setQuery] = useState("");
-  const [difficulty, setDifficulty] = useState("all");
-  const normalizedQuery = query.trim().toLowerCase();
+  const [difficulty, setDifficulty] = useState<DifficultyFilter>("all");
+  const [topic, setTopic] = useState(initialTopic);
+  const deferredQuery = useDeferredValue(query.trim().toLowerCase());
+  const topics = useMemo(
+    () =>
+      [...new Set(documents.flatMap((document) => document.topics))].sort((left, right) =>
+        left.localeCompare(right),
+      ),
+    [documents],
+  );
   const filtered = useMemo(
     () =>
       documents.filter((document) => {
@@ -19,75 +35,114 @@ export function NotesLibrary({ documents }: { documents: LearnlyDocument[] }) {
           document.originalFilename,
           document.description,
           ...document.topics,
-        ].some((value) => value?.toLowerCase().includes(normalizedQuery));
+          ...document.tags,
+        ].some((value) => value?.toLowerCase().includes(deferredQuery));
         const matchesDifficulty = difficulty === "all" || document.difficulty === difficulty;
+        const matchesTopic =
+          topic === "all" ||
+          document.topics.some(
+            (documentTopic) => documentTopic.toLowerCase() === topic.toLowerCase(),
+          );
 
-        return matchesQuery && matchesDifficulty;
+        return matchesQuery && matchesDifficulty && matchesTopic;
       }),
-    [difficulty, documents, normalizedQuery],
+    [deferredQuery, difficulty, documents, topic],
   );
+
+  function clearFilters() {
+    setQuery("");
+    setDifficulty("all");
+    setTopic("all");
+  }
 
   return (
     <div className={styles.page}>
       <header className={styles.heading}>
-        <div className={styles.headingCopy}>
-          <span>Published library</span>
+        <div>
+          <span>Your published material</span>
           <h1>
-            Notes for the
+            A library that
             <br />
-            <em>curious mind.</em>
+            feels like yours.
           </h1>
           <p>
-            Structured study material across development and computer science, ready whenever you
-            want to go deeper.
+            Browse the educational PDFs you chose to publish. Search by what you remember, not by
+            where the file was saved.
           </p>
         </div>
-        <div className={styles.count}>
-          <strong>{filtered.length.toString().padStart(2, "0")}</strong>
-          <span>notes in view</span>
-          <div className={styles.countLine}>
-            <span />
-          </div>
-        </div>
+        <aside aria-label="Published document count">
+          <strong>{documents.length.toString().padStart(2, "0")}</strong>
+          <span>PDFs on the shelf</span>
+        </aside>
       </header>
-      <div className={styles.filters}>
+
+      <section className={styles.controls} aria-label="Library filters">
         <label className={styles.search}>
-          <span className="sr-only">Search notes</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-4-4" />
-          </svg>
+          <span>Search this shelf</span>
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search your library…"
+            placeholder="Title, filename, or topic"
           />
         </label>
+
+        <label className={styles.topicSelect}>
+          <span>Topic</span>
+          <select value={topic} onChange={(event) => setTopic(event.target.value)}>
+            <option value="all">All topics</option>
+            {topics.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <div className={styles.difficulty} role="group" aria-label="Filter by difficulty">
-          {["all", "beginner", "intermediate", "advanced"].map((level) => (
+          {(["all", "beginner", "intermediate", "advanced"] as const).map((level) => (
             <button
               key={level}
               type="button"
               onClick={() => setDifficulty(level)}
-              className={difficulty === level ? styles.selected : ""}
+              aria-pressed={difficulty === level}
             >
-              {level === "all" ? "All levels" : level}
-              {difficulty === level && <span />}
+              {level === "all" ? "Every level" : level}
             </button>
           ))}
         </div>
+      </section>
+
+      <div className={styles.resultLine} aria-live="polite">
+        <span>
+          {filtered.length} {filtered.length === 1 ? "document" : "documents"} in view
+        </span>
+        {query || difficulty !== "all" || topic !== "all" ? (
+          <button type="button" onClick={clearFilters}>
+            Clear filters
+          </button>
+        ) : null}
       </div>
-      {filtered.length ? (
+
+      {filtered.length > 0 ? (
         <div className={styles.grid}>
           {filtered.map((document, index) => (
-            <NoteCard key={document.id} document={document} index={index} />
+            <DocumentFolio
+              key={document.id}
+              document={document}
+              index={index}
+              featured={index === 0 && filtered.length > 2}
+            />
           ))}
         </div>
       ) : (
-        <EmptyState
-          title="No matching notes"
-          body="Try a broader search or clear the selected difficulty."
-        />
+        <div className={styles.empty}>
+          <span aria-hidden>⌁</span>
+          <h2>Nothing matches that shelf.</h2>
+          <p>Try a broader phrase, another level, or clear the selected topic.</p>
+          <button type="button" onClick={clearFilters}>
+            Show the whole library
+          </button>
+        </div>
       )}
     </div>
   );

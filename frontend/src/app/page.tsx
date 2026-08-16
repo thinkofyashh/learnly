@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { DocumentFolio } from "@/components/DocumentFolio";
 import { StudyDeskHero } from "@/components/StudyDeskHero";
+import { toTopicSlug } from "@/lib/topics";
 import { getPublishedDocuments } from "@/services/api-client";
 
 import styles from "./page.module.css";
@@ -122,11 +123,7 @@ export default async function Home() {
           </header>
           <div>
             {topics.map(([topic, count], index) => (
-              <Link
-                key={topic}
-                href={`/notes?topic=${encodeURIComponent(topic)}`}
-                data-tone={index % 4}
-              >
+              <Link key={topic} href={`/topics/${toTopicSlug(topic)}`} data-tone={index % 4}>
                 <span>{topic}</span>
                 <strong>{count}</strong>
                 <small>{count === 1 ? "document" : "documents"}</small>

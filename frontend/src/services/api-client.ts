@@ -73,6 +73,20 @@ export async function getPublishedDocuments(page = 1, limit = 100): Promise<Docu
   });
 }
 
+export async function getAllPublishedDocuments(): Promise<LearnlyDocument[]> {
+  const firstPage = await getPublishedDocuments(1, 100);
+
+  if (firstPage.pages <= 1) return firstPage.items;
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: firstPage.pages - 1 }, (_, index) =>
+      getPublishedDocuments(index + 2, 100),
+    ),
+  );
+
+  return [firstPage, ...remainingPages].flatMap((page) => page.items);
+}
+
 export async function getPublishedDocument(slug: string): Promise<LearnlyDocument | null> {
   try {
     return await apiRequest<LearnlyDocument>(`/documents/${encodeURIComponent(slug)}`, {

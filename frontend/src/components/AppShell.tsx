@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { PaperBloom } from "./PaperBloom";
+import { SearchOverlay } from "./SearchOverlay";
 import { ThemeToggle } from "./ThemeToggle";
 import styles from "./AppShell.module.css";
 
 const publicNavigation = [
   { href: "/", label: "Explore" },
   { href: "/notes", label: "Library" },
+  { href: "/topics", label: "Topics" },
 ];
 
 const adminNavigation = [
@@ -35,6 +38,22 @@ function Brand({ compact = false }: { compact?: boolean }) {
 }
 
 function PublicShell({ children, path }: { children: React.ReactNode; path: string }) {
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchButtonRef = useRef<HTMLButtonElement>(null);
+  const closeSearch = useCallback(() => setSearchOpen(false), []);
+
+  useEffect(() => {
+    function openFromKeyboard(event: globalThis.KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setSearchOpen(true);
+      }
+    }
+
+    window.addEventListener("keydown", openFromKeyboard);
+    return () => window.removeEventListener("keydown", openFromKeyboard);
+  }, []);
+
   return (
     <div className={styles.publicShell}>
       <header className={styles.publicHeader}>
@@ -51,15 +70,22 @@ function PublicShell({ children, path }: { children: React.ReactNode; path: stri
           ))}
         </nav>
         <div className={styles.headerActions}>
-          <Link href="/notes" className={styles.searchAction}>
+          <button
+            ref={searchButtonRef}
+            type="button"
+            className={styles.searchAction}
+            onClick={() => setSearchOpen(true)}
+          >
             Search <kbd>⌘ K</kbd>
-          </Link>
+          </button>
           <ThemeToggle />
           <Link className={styles.addAction} href="/admin/upload">
             <span aria-hidden>+</span> Add something
           </Link>
         </div>
       </header>
+
+      {searchOpen ? <SearchOverlay onClose={closeSearch} returnFocusRef={searchButtonRef} /> : null}
 
       <main className={styles.publicMain}>{children}</main>
 
@@ -68,6 +94,7 @@ function PublicShell({ children, path }: { children: React.ReactNode; path: stri
         <p>PDFs worth returning to, kept in one thoughtful place.</p>
         <div>
           <Link href="/notes">Library</Link>
+          <Link href="/topics">Topics</Link>
           <Link href="/admin">Studio</Link>
           <span>© 2026 Learnly</span>
         </div>
@@ -79,6 +106,9 @@ function PublicShell({ children, path }: { children: React.ReactNode; path: stri
         </Link>
         <Link href="/notes" className={path.startsWith("/notes") ? styles.mobileActive : ""}>
           Library
+        </Link>
+        <Link href="/topics" className={path.startsWith("/topics") ? styles.mobileActive : ""}>
+          Topics
         </Link>
         <Link href="/admin/upload" className={styles.mobileAdd}>
           <span aria-hidden>+</span>

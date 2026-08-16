@@ -85,7 +85,10 @@
   align-items: center;
   gap: 8px;
   border-radius: 12px;
+  border: 0;
   color: var(--ink-soft);
+  background: transparent;
+  cursor: pointer;
   font-size: 0.73rem;
   font-weight: 600;
 }
